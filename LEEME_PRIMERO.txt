@@ -1,0 +1,57 @@
+ESCAPE DEL LABORATORIO NUMÉRICO II — EDICIÓN DELUXE
+Proyecto académico interactivo de Métodos Numéricos
+Desarrollado para: Jorge Hugo De León Sepúlveda
+
+================ INICIO RÁPIDO ================
+1. Abre el archivo «Escape_Laboratorio_Numerico_DELUXE.html» con Chrome, Edge o Firefox.
+2. Pulsa «INICIAR MISIÓN».
+3. Mueve a HUGO usando las flechas o W, A, S, D.
+4. Acércate a una consola. Presiona E.
+5. Selecciona «RESOLVER AUTOMÁTICAMENTE» y observa resultado, gráfica y procedimiento.
+6. Cuando hayas resuelto las 5 consolas del sector, ve a la puerta derecha y presiona F.
+7. En el sector final, desactiva 3 escudos con E. Después dispara con ESPACIO para derrotar a OMEGA.
+
+================ CONTROLES ==================
+WASD o flechas  = mover personaje
+E               = interactuar con consola
+F               = siguiente sala (después de terminar 5 consolas)
+ESPACIO         = disparar durante el jefe final (una vez quitados los escudos)
+T               = modo profesor
+H               = ayuda
+M               = activar / desactivar sonidos
+Clic en el mapa = caminar hacia ese punto
+
+================ NOVEDADES DELUXE ===========
+• 4 sectores académicos, con 20 métodos numéricos programados.
+• 5 métodos de mínimos cuadrados tomados de los apuntes MCuadrados.zip del curso.
+• Laboratorio con enemigos (drones), energía, pantalla de daño, partículas y efectos sonoros.
+• Historia de ciencia ficción y batalla final contra OMEGA con 3 escudos calculados por algoritmos reales.
+• Modo profesor, donde puedes cambiar ecuaciones, datos, matrices y funciones para los ajustes.
+• Representación de datos y gráficas, sistemas normales, eliminación y errores de los ajustes.
+• Partidas guardadas con almacenamiento local cuando el navegador lo permita.
+• Funciona sin internet ni instalaciones al usar el archivo HTML independiente.
+
+================ LOS 20 MÉTODOS =============
+RAÍCES: Bisección, Falsa posición, Newton-Raphson, Secante, Punto fijo.
+INTERPOLACIÓN: Lineal, Lagrange, Newton hacia adelante, Newton hacia atrás,
+Diferencias divididas.
+SISTEMAS: Eliminación Gauss, Gauss-Jordan, Montante, Jacobi, Gauss-Seidel.
+MÍNIMOS CUADRADOS: Línea recta, Cuadrática, Cúbica,
+Lineal con función, Cuadrática con función.
+
+================ MODO PROFESOR ==============
+• Puedes introducir puntos como: 0,1; 1,2; 2,4; 3,8
+• Para regresión, elige sin(x), cos(x), exp(x), ln(x), sqrt(x) o tan(x).
+• Pulsa «CARGAR DATOS DE EJEMPLO» para usar los valores adecuados a cada ajuste.
+• Los resultados y procedimientos se calculan en el navegador: NO se usan respuestas fijas.
+• Los valores elegidos deben permitir la convergencia de algunos algoritmos; el sistema avisa de errores.
+
+================ ARCHIVOS ===================
+Escape_Laboratorio_Numerico_DELUXE.html    Juego independiente para abrir de inmediato
+codigo_fuente/                            HTML, estilos y los algoritmos en JavaScript
+capturas/                                 Fotografías reales de la interfaz ejecutada
+PROPUESTA_PARA_EL_INGENIERO.md            Resumen, objetivos y explicación académica
+pruebas_numericas.js                     Pruebas automatizadas para Node.js (opcional)
+MCuadrados_original.zip                   Apuntes del usuario proporcionados como referencia
+
+RECOMENDADO: Usa el archivo HTML independiente para jugar o presentar. No necesitas instalar nada.

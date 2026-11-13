@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071019">
+  <title>Escape del Laboratorio Numérico · Juego 2D</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <div class="shell">
+    <header class="site-header">
+      <div class="brand"><div class="brand-icon">∑</div><div><div class="eyebrow">LAB SYSTEM // DELUXE 2.0</div><h1>NUMERICAL<span>ESCAPE II</span></h1></div></div>
+      <div class="site-actions">
+        <div class="online-indicator"><span class="status-dot"></span> FUNCIONA SIN INTERNET</div>
+        <button class="top-btn" id="audioBtn" type="button" title="Activar o silenciar sonidos">♫ <span>Sonido: ON</span></button><button class="top-btn" id="helpBtn" type="button">? <span>Ayuda</span></button>
+        <button class="top-btn accent" id="teacherBtn" type="button">⚗ <span>Modo profesor</span></button>
+      </div>
+    </header>
+    <div class="dashboard">
+      <main class="game-frame">
+        <div class="game-topline"><div class="room-line"><span class="tiny-dot"></span> <span id="stageHeading">SECTOR 01 / ACCESO Y SEGURIDAD</span></div><div class="game-topline-right"><span id="clockText">00:00</span><span>● SIMULACIÓN ACTIVA</span></div></div>
+        <div class="canvas-wrap">
+          <canvas id="game" width="1080" height="590" aria-label="Videojuego 2D: mueve el personaje para activar terminales numéricas">Tu navegador no es compatible con Canvas 2D.</canvas>
+          <div class="canvas-toast" id="gameToast" role="status" aria-live="polite"></div>
+          <div class="hud-vitals"><div class="vital-head"><span>♥ TRAJE / ENERGÍA</span><b id="healthText">100%</b></div><div class="vital-track"><div id="healthFill"></div></div><div id="bossHud" class="boss-hud" hidden><div class="vital-head"><span>☣ OMEGA / INTEGRIDAD</span><b id="bossText">100%</b></div><div class="vital-track boss-track"><div id="bossFill"></div></div></div></div>
+        </div>
+        <div class="game-footer"><div class="interaction" id="interaction"><kbd>W A S D</kbd> / <kbd>↑ ← ↓ →</kbd> · <kbd>ESPACIO</kbd> atacar al jefe</div><div class="footer-right"><kbd>E</kbd> Interactuar <span class="bullet">·</span> <kbd>F</kbd> Siguiente sala</div></div>
+        <div class="touch-controls"><button class="move-up" data-move="ArrowUp" aria-label="Subir">▲</button><div><button data-move="ArrowLeft" aria-label="Izquierda">◀</button><button class="touch-action" id="touchAction">E · ACTIVAR</button><button data-move="ArrowRight" aria-label="Derecha">▶</button></div><button class="move-down" data-move="ArrowDown" aria-label="Bajar">▼</button></div>
+      </main>
+      <aside class="mission-panel">
+        <div class="panel-cap"><span>BITÁCORA DE MISIÓN</span><span class="cap-right">OP. 2141751</span></div>
+        <div class="mission-status"><div class="mission-mark">⌁</div><div class="mini-label">MISIÓN ACTIVA</div><h2 id="roomTitle">Acceso y seguridad</h2><p id="roomDesc">Reactiva los mecanismos de acceso resolviendo ecuaciones no lineales.</p></div>
+        <div class="progress-area"><div class="progress-label"><span>PROGRESO GLOBAL</span><strong id="globalCount">0 / 15</strong></div><div class="progress-track"><div id="globalFill"></div></div><div class="room-badges"><span id="badge0">01 · RAÍCES</span><span id="badge1">02 · DATOS</span><span id="badge2">03 · ENERGÍA</span><span id="badge3">04 · AJUSTES</span><span id="badge4">05 · JEFE</span></div></div>
+        <div class="terminal-header"><span>TERMINALES DE LA SALA</span><span id="roomCount">0/5</span></div>
+        <div id="terminalList" class="terminal-list"></div>
+        <div class="sidebar-note"><span class="note-icon">!</span><div>Acércate a cada consola y presiona <b>E</b>. El sistema hará los cálculos automáticamente y enseñará sus pasos.</div></div>
+        <div class="aside-bottom"><span>20 ALGORITMOS VERIFICABLES</span><span class="green-tick">● ONLINE</span></div>
+      </aside>
+    </div>
+    <footer class="credits"><span>PROYECTO ACADÉMICO · MÉTODOS NUMÉRICOS</span><span>DESARROLLADO PARA JORGE HUGO DE LEÓN SEPÚLVEDA</span></footer>
+  </div>
+  <div id="overlay" class="overlay hidden" role="presentation"><div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-label="Panel del laboratorio"></div></div>
+  <script src="metodos.js"></script><script src="minimos_cuadrados.js"></script><script src="juego.js"></script>
+</body>
+</html>
