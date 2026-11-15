@@ -3,9 +3,9 @@ import { Dialogo } from './Dialogo';
 export function Ayuda({ onCerrar }: { onCerrar: () => void }) {
   const filas: [string, string][] = [
     ['WASD / flechas', 'Moverte por la sala. También puedes hacer clic en el suelo o usar los controles táctiles.'],
-    ['E', 'Activar la consola cercana y abrir su método.'],
-    ['F', 'Cruzar la puerta cuando las 5 consolas de la sala estén resueltas.'],
-    ['Espacio', 'Disparar a OMEGA una vez desactivados sus 3 escudos.'],
+    ['E', 'Activar el módulo cercano y abrir su problema.'],
+    ['F', 'Cruzar la puerta cuando TODOS los problemas de la sala estén resueltos.'],
+    ['Espacio', 'Disparar a OMEGA una vez desactivados sus 8 escudos (los métodos de ecuaciones diferenciales).'],
     ['T', 'Abrir el modo profesor (cualquier método, datos libres).'],
     ['H', 'Mostrar esta ayuda.'],
     ['M', 'Activar o silenciar el sonido.'],
@@ -15,8 +15,14 @@ export function Ayuda({ onCerrar }: { onCerrar: () => void }) {
     <Dialogo titulo="Cómo jugar" onCerrar={onCerrar} ancho="md">
       <div className="flex flex-col gap-4">
         <p className="m-0 text-tenue">
-          Los centinelas quitan 12 de energía al tocarte y los rayos de OMEGA 17. Si tu energía llega a 0, reapareces en la entrada de la sala sin perder
-          lo resuelto. Cada método resuelto recarga 7 de energía.
+          Tienes <strong className="text-tinta">5 vidas de 100 puntos</strong>. Los centinelas quitan 12 puntos al tocarte, los rayos de OMEGA 17 y cada
+          respuesta incorrecta 5. Al llegar a 0 pierdes una vida y reapareces en la entrada. Si pierdes las 5 vidas, la sala se reinicia: sus problemas
+          cambian y vuelven a quedar sin resolver. Cada problema resuelto recarga 7 puntos.
+        </p>
+        <p className="m-0 text-tenue">
+          Cada módulo te plantea un problema. Resuélvelo a mano con el método del libro, sube la <strong className="text-tinta">foto de tu procedimiento</strong>{' '}
+          (obligatoria, la revisa tu docente) y escribe tu resultado: cuenta como correcto solo si coincide desde la parte entera hasta el 3.er decimal. Al
+          acertar se muestra la resolución completa. Todos los problemas de una sala son obligatorios para pasar a la siguiente.
         </p>
         <table className="w-full border-collapse text-sm">
           <tbody>

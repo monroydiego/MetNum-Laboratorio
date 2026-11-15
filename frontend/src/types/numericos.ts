@@ -72,6 +72,28 @@ export interface MetodoInfoDTO {
   ejemplo: Record<string, unknown>;
 }
 
+/** GET /api/metodos/{slug}/problema: problema aleatorio verificado (cuerpo listo para /api/calcular/{slug}). */
+export interface ProblemaDTO {
+  slug: string;
+  entrada: Record<string, unknown>;
+  /** Valores que el alumno debe capturar (vacío en métodos de consulta). */
+  campos_respuesta: string[];
+}
+
+/** POST /api/problemas/revisar: si los datos ya no cumplen las restricciones del método, llegan otros. */
+export interface RevisionDTO extends ProblemaDTO {
+  reemplazado: boolean;
+}
+
+/** POST /api/problemas/verificar (multipart con la foto obligatoria): la resolución solo llega si es correcta. */
+export interface VerificacionDTO {
+  correcta: boolean;
+  campos: Record<string, boolean>;
+  resultado: ResultadoNumericoDTO | null;
+  /** Folio del intento (con la foto del procedimiento) en el Panel Docente. */
+  folio: number;
+}
+
 export interface ErrorDTO {
   detail: string;
 }
@@ -88,7 +110,10 @@ export interface EvidenciaDTO {
   error: number | null;
   iteraciones_json: Record<string, string | null>[];
   foto_procedimiento_url: string;
+  /** "" en los intentos de respuesta del juego (solo llevan la foto del procedimiento). */
   foto_canvas_url: string;
+  /** Intento del juego: ¿respuesta correcta? (null = evidencia del Modo Comprobación). */
+  correcta: boolean | null;
   fecha_registro: string;
 }
 

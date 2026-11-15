@@ -1,24 +1,25 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Tokens de diseño: terminal de laboratorio oscura, azul petróleo.
-   Cian/menta = propio y seguro. Rojo/rosa = SOLO lo hostil. */
+/* Tokens de diseño: laboratorio claro (porcelana, vidrio de matraz y reactivos).
+   Verde matraz = propio y seguro. Ámbar = atención. Coral/vino = SOLO lo hostil. */
 @theme {
-  --color-fondo: #070e15;
-  --color-panel: #101b26;
-  --color-panel-2: #121f2b;
-  --color-linea: #263645;
-  --color-tinta: #eaf3fb;
-  --color-tenue: #8fa1b2;
-  --color-cian: #48e7d5;
-  --color-cian-2: #178f8f;
-  --color-ambar: #ffcf76;
-  --color-menta: #83eda3;
-  --color-hostil: #ff7781;
-  --color-omega: #ff396d;
-  --color-escudo: #bf76fb;
+  --color-fondo: #f1efe9;
+  --color-panel: #ffffff;
+  --color-panel-2: #f7f6f2;
+  --color-linea: #dedad1;
+  --color-tinta: #22302d;
+  --color-tenue: #5f6b67;
+  --color-primario: #2d7a67;
+  --color-primario-2: #8fc3b4;
+  --color-ambar: #b9741a;
+  --color-menta: #2f8f55;
+  --color-hostil: #c4483a;
+  --color-omega: #a8325a;
+  --color-escudo: #6f55b8;
+  --color-campo: #fbfaf7;
 
-  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -52,15 +53,19 @@
 
 /* Variables espejo en :root para quien no pasa por Tailwind (canvas lee tokens.ts). */
 :root {
-  color-scheme: dark;
-  --fondo: #070e15;
-  --cian: #48e7d5;
-  --hostil: #ff7781;
+  color-scheme: light;
+  --fondo: #f1efe9;
+  --primario: #2d7a67;
+  --hostil: #c4483a;
 }
 
 @layer base {
   html {
-    background: var(--color-fondo);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, color-mix(in oklab, var(--color-primario-2) 22%, transparent), transparent 70%),
+      radial-gradient(900px 500px at -10% 110%, color-mix(in oklab, var(--color-ambar) 8%, transparent), transparent 70%),
+      var(--color-fondo);
+    background-attachment: fixed;
     color: var(--color-tinta);
     font-family: var(--font-sans);
     -webkit-text-size-adjust: 100%;
@@ -73,6 +78,7 @@
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     font-weight: 600;
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
   :focus-visible {
@@ -80,10 +86,11 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: color-mix(in oklab, var(--color-cian) 35%, transparent);
+    background: color-mix(in oklab, var(--color-primario) 35%, transparent);
   }
   dialog::backdrop {
-    background: rgb(3 7 11 / 0.78);
+    background: rgb(34 48 45 / 0.45);
+    backdrop-filter: blur(3px);
   }
   input, select, textarea, button {
     font: inherit;
@@ -98,53 +105,65 @@
     justify-content: center;
     gap: 0.5rem;
     min-height: 2.5rem;
-    padding: 0.45rem 0.95rem;
-    border-radius: 0.5rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
     border: 1px solid var(--color-linea);
-    background: var(--color-panel-2);
+    background: var(--color-panel);
     color: var(--color-tinta);
     font-family: var(--font-display);
     font-weight: 600;
     font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: 0 1px 2px rgb(34 48 45 / 0.06);
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
   }
   .btn:hover:not(:disabled) {
-    border-color: var(--color-cian-2);
+    border-color: var(--color-primario-2);
+    background: var(--color-panel-2);
   }
   .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
   .btn-primario {
-    background: var(--color-cian);
-    border-color: var(--color-cian);
-    color: #04201d;
+    background: var(--color-primario);
+    border-color: var(--color-primario);
+    color: #ffffff;
+    box-shadow: 0 2px 6px color-mix(in oklab, var(--color-primario) 30%, transparent);
   }
   .btn-primario:hover:not(:disabled) {
-    background: #7af0e2;
-    border-color: #7af0e2;
+    background: #246656;
+    border-color: #246656;
   }
   .btn-fantasma {
     background: transparent;
     border-color: transparent;
     color: var(--color-tenue);
+    box-shadow: none;
   }
   .btn-fantasma:hover:not(:disabled) {
     color: var(--color-tinta);
-    border-color: var(--color-linea);
+    background: color-mix(in oklab, var(--color-primario-2) 18%, transparent);
+    border-color: transparent;
+  }
+  /* Tarjeta de laboratorio: panel blanco con sombra suave. */
+  .tarjeta {
+    border: 1px solid var(--color-linea);
+    border-radius: 1rem;
+    background: var(--color-panel);
+    box-shadow: 0 1px 2px rgb(34 48 45 / 0.04), 0 8px 24px -12px rgb(34 48 45 / 0.12);
   }
   .campo {
     width: 100%;
     min-height: 2.5rem;
     padding: 0.4rem 0.65rem;
-    border-radius: 0.4rem;
+    border-radius: 0.6rem;
     border: 1px solid var(--color-linea);
-    background: #0b151f;
+    background: var(--color-campo);
     color: var(--color-tinta);
   }
   .campo:focus-visible {
-    outline: 2px solid var(--color-cian);
+    outline: 2px solid var(--color-primario);
     outline-offset: 0;
     border-color: transparent;
   }
@@ -160,7 +179,7 @@
     border-radius: 0.3rem;
     border: 1px solid var(--color-linea);
     border-bottom-width: 2px;
-    background: var(--color-panel-2);
+    background: var(--color-panel);
     font-family: var(--font-display);
     font-size: 0.8rem;
     font-weight: 600;

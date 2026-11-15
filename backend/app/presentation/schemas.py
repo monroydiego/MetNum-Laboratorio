@@ -55,6 +55,34 @@ class MetodoInfoOut(BaseModel):
     ejemplo: dict[str, Any] = Field(description="Datos del ejemplo resuelto del libro")
 
 
+class ProblemaOut(BaseModel):
+    slug: str
+    entrada: dict[str, Any] = Field(description="Datos del problema (cuerpo de POST /api/calcular/{slug})")
+    campos_respuesta: list[str] = Field(
+        description="Claves de los valores que el alumno debe capturar; vacío si el método es solo de consulta"
+    )
+
+
+class RevisarIn(BaseModel):
+    slug: str
+    entrada: dict[str, Any] = Field(description="Datos de un problema ya planteado (p. ej. guardado en la partida)")
+
+
+class RevisionOut(ProblemaOut):
+    reemplazado: bool = Field(
+        description="True si los datos no cumplían las restricciones del método y se cambiaron por otros"
+    )
+
+
+class VerificacionOut(BaseModel):
+    correcta: bool
+    campos: dict[str, bool] = Field(description="clave -> ¿coincide hasta el 3.er decimal?")
+    resultado: ResultadoOut | None = Field(
+        None, description="Resolución completa; solo se entrega cuando la respuesta es correcta"
+    )
+    folio: int = Field(description="Folio del intento (con la foto del procedimiento) en el Panel Docente")
+
+
 class ErrorOut(BaseModel):
     detail: str
 
@@ -69,5 +97,6 @@ class EvidenciaOut(BaseModel):
     error: float | None
     iteraciones_json: list[dict[str, str | None]]
     foto_procedimiento_url: str
-    foto_canvas_url: str
+    foto_canvas_url: str = Field(description='"" en los intentos de respuesta del juego')
+    correcta: bool | None = Field(None, description="Intento del juego: ¿correcta? (None = Modo Comprobación)")
     fecha_registro: str

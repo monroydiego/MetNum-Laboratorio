@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, create_engine, inspect, text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]  # backend/
@@ -27,7 +27,8 @@ class EvidenciaModel(Base):
     error = Column(Float, nullable=True)  # Margen de Error Є del libro (None si el método no lo define)
     iteraciones_json = Column(JSON, nullable=False)  # Tabla completa (filas como str)
     foto_procedimiento_url = Column(String(255), nullable=False)  # solo la ruta, nunca el binario
-    foto_canvas_url = Column(String(255), nullable=False)
+    foto_canvas_url = Column(String(255), nullable=False)  # "" en los intentos de respuesta del juego
+    correcta = Column(Boolean, nullable=True)  # intento del juego: ¿respuesta correcta? (None = Modo Comprobación)
     fecha_registro = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
@@ -48,3 +49,7 @@ def preparar_bd() -> None:
                 )
             EvidenciaModel.__table__.drop(con)
     Base.metadata.create_all(bind=engine)
+    if columnas and "correcta" not in columnas:
+        # Esquema anterior sin la columna de los intentos de respuesta: se agrega sin perder datos.
+        with engine.begin() as con:
+            con.execute(text(f"ALTER TABLE {EvidenciaModel.__tablename__} ADD COLUMN correcta BOOLEAN"))

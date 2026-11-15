@@ -254,7 +254,7 @@ export function JuegoCanvas(props: Props) {
   }
 
   const claseTactil =
-    'grid size-12 place-items-center rounded-lg border border-linea bg-panel-2 text-tinta active:bg-cian-2 touch-none select-none';
+    'grid size-12 place-items-center rounded-lg border border-linea bg-panel-2 text-tinta active:bg-primario-2 touch-none select-none';
 
   return (
     <div className="flex flex-col gap-3">
@@ -313,12 +313,12 @@ function calcularIndicacion(m: Mundo, p: Props, cercana: number): Indicacion {
     if (p.omegaVida <= 0) return { tecla: null, texto: 'OMEGA está desconectada.' };
     if (p.escudosCaidos) return { tecla: 'Espacio', texto: 'Dispara al núcleo y esquiva los rayos' };
     const faltan = p.sala.consolas.filter((c) => !p.resueltos.includes(c.slug)).length;
-    return { tecla: 'E', texto: `Desactiva ${faltan === 1 ? 'el escudo que falta' : `los ${faltan} escudos que faltan`} en sus consolas` };
+    return { tecla: 'E', texto: `Desactiva ${faltan === 1 ? 'el escudo que falta' : `los ${faltan} escudos que faltan`} en sus módulos` };
   }
   if (cercaPuerta(m, p.sala)) {
     if (p.puertaAbierta) return { tecla: 'F', texto: 'Cruzar a la siguiente sala' };
-    const faltan = p.sala.consolas.filter((c) => c.tipo === 'obligatoria' && !p.resueltos.includes(c.slug)).length;
-    return { tecla: 'F', texto: `Puerta bloqueada: ${faltan === 1 ? 'falta 1 consola' : `faltan ${faltan} consolas`}` };
+    const faltan = p.sala.consolas.filter((c) => !p.resueltos.includes(c.slug)).length;
+    return { tecla: 'F', texto: `Puerta bloqueada: ${faltan === 1 ? 'falta 1 problema' : `faltan ${faltan} problemas`}` };
   }
   return { tecla: 'WASD', texto: 'o flechas para moverte; también puedes hacer clic en el suelo' };
 }

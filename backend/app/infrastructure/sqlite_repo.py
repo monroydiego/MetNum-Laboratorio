@@ -23,6 +23,7 @@ class SQLiteEvidenciaRepo(IEvidenciaRepo):
                 iteraciones_json=evidencia.iteraciones,
                 foto_procedimiento_url=evidencia.foto_procedimiento_url,
                 foto_canvas_url=evidencia.foto_canvas_url,
+                correcta=evidencia.correcta,
             )
             s.add(modelo)
             s.commit()
@@ -51,5 +52,6 @@ def _a_dominio(m: EvidenciaModel) -> EvidenciaGuardada:
             iteraciones=list(m.iteraciones_json or []),
             foto_procedimiento_url=m.foto_procedimiento_url,
             foto_canvas_url=m.foto_canvas_url,
+            correcta=m.correcta,
         ),
     )

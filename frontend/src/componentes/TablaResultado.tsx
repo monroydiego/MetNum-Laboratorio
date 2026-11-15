@@ -26,7 +26,7 @@ export function TablaResultado({ columnas, filas, titulo = 'Tabla de iteraciones
           </thead>
           <tbody>
             {filas.map((f, i) => (
-              <tr key={i} className="odd:bg-white/[0.015] hover:bg-cian/5">
+              <tr key={i} className="odd:bg-white/[0.015] hover:bg-primario/5">
                 {columnas.map((c) => (
                   <td key={c.clave} className="border-b border-linea/60 px-3 py-1.5 whitespace-nowrap">
                     <ValorCelda valor={f[c.clave]} />

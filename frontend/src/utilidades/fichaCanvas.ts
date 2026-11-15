@@ -15,7 +15,7 @@ export function fichaResultadoPNG(r: ResultadoNumericoDTO): Promise<Blob | null>
   if (!c) return Promise.resolve(null);
   c.fillStyle = color.panel;
   c.fillRect(0, 0, W, H);
-  c.fillStyle = color.cian;
+  c.fillStyle = color.primario;
   c.fillRect(0, 0, W, 4);
   c.fillStyle = color.tinta;
   c.font = `600 24px ${fuente.display}`;

@@ -1,28 +1,29 @@
 // Tokens de color para el Canvas (espejo de @theme en index.css).
 export const color = {
-  fondo: '#070e15',
-  panel: '#101b26',
-  panel2: '#121f2b',
-  linea: '#263645',
-  tinta: '#eaf3fb',
-  tenue: '#8fa1b2',
-  cian: '#48e7d5',
-  cian2: '#178f8f',
-  ambar: '#ffcf76',
-  menta: '#83eda3',
-  hostil: '#ff7781',
-  omega: '#ff396d',
-  escudo: '#bf76fb',
+  fondo: '#f1efe9',
+  panel: '#ffffff',
+  panel2: '#f7f6f2',
+  linea: '#dedad1',
+  tinta: '#22302d',
+  tenue: '#5f6b67',
+  primario: '#2d7a67',
+  primario2: '#8fc3b4',
+  ambar: '#b9741a',
+  menta: '#2f8f55',
+  hostil: '#c4483a',
+  omega: '#a8325a',
+  escudo: '#6f55b8',
+  azul: '#3c6ea6',
 } as const;
 
 export const fuente = {
-  display: '"Chakra Petch", system-ui, sans-serif',
+  display: '"Outfit", system-ui, sans-serif',
   sans: '"Atkinson Hyperlegible", system-ui, sans-serif',
   mono: '"JetBrains Mono", ui-monospace, monospace',
 } as const;
 
 /** Paleta de series de la gráfica: nunca usa rojo (reservado a lo hostil). */
-export const paletaSeries = [color.cian, color.ambar, color.menta, color.escudo, '#7fb4ff', color.tinta] as const;
+export const paletaSeries = [color.primario, color.ambar, color.azul, color.escudo, color.menta, color.tinta] as const;
 
 /** Añade canal alfa (0-1) a un color hexadecimal #rrggbb. */
 export function conAlfa(hex: string, alfa: number): string {

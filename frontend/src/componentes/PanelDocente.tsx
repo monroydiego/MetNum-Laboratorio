@@ -1,4 +1,5 @@
-// Panel Docente: evidencias con foto del procedimiento vs canvas vs tabla, lado a lado.
+// Panel Docente: evidencias del Modo Comprobación (foto vs gráfica vs tabla) e intentos de respuesta del juego
+// (cada uno con la foto obligatoria del procedimiento y si la respuesta fue correcta).
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { RefreshCw, Search } from 'lucide-react';
 import { Dialogo } from './Dialogo';
@@ -54,7 +55,7 @@ export function PanelDocente({ onCerrar, matriculaInicial = '' }: { onCerrar: ()
   const visibles = aplicado ? evidencias.filter((ev) => ev.matricula.includes(aplicado)) : evidencias;
 
   return (
-    <Dialogo titulo="Panel Docente" subtitulo="Compara la foto del procedimiento con la gráfica y la tabla calculadas." onCerrar={onCerrar} completo>
+    <Dialogo titulo="Panel Docente" subtitulo="Revisa la foto del procedimiento de cada intento de respuesta y compárala con la tabla calculada." onCerrar={onCerrar} completo>
       <div className="flex flex-col gap-5">
         <form onSubmit={filtrar} className="flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold">
@@ -89,15 +90,20 @@ export function PanelDocente({ onCerrar, matriculaInicial = '' }: { onCerrar: ()
         )}
         {estado === 'listo' && !visibles.length && (
           <p className="m-0 rounded-xl border border-dashed border-linea p-6 text-tenue">
-            {aplicado ? `No hay evidencias de la matrícula ${aplicado}.` : 'Todavía no hay evidencias. Aparecerán cuando un estudiante use el Modo Comprobación Docente.'}
+            {aplicado ? `No hay evidencias de la matrícula ${aplicado}.` : 'Todavía no hay evidencias. Aparecerán cuando un estudiante verifique una respuesta (con la foto de su procedimiento).'}
           </p>
         )}
         {estado === 'listo' && (
           <ul className="m-0 flex list-none flex-col gap-5 p-0">
             {visibles.map((ev) => (
-              <li key={ev.id} className="rounded-xl border border-linea bg-panel-2/50">
+              <li key={ev.id} className="tarjeta">
                 <header className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-linea px-4 py-3">
                   <h3 className="m-0 text-xl">{ev.metodo}</h3>
+                  {ev.correcta !== null && (
+                    <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${ev.correcta ? 'bg-menta/12 text-menta' : 'bg-hostil/10 text-hostil'}`}>
+                      {ev.correcta ? 'Respuesta correcta' : 'Respuesta incorrecta'}
+                    </span>
+                  )}
                   <span className="text-sm text-tenue">
                     Matrícula <span className="numero text-tinta">{ev.matricula}</span>
                   </span>
@@ -113,8 +119,8 @@ export function PanelDocente({ onCerrar, matriculaInicial = '' }: { onCerrar: ()
                     <span className="numero">{ev.funcion}</span>
                   </p>
                   <p className="m-0 break-words">
-                    <span className="text-tenue">Resultado: </span>
-                    <span className="numero text-cian">{ev.resultado_exacto}</span>
+                    <span className="text-tenue">{ev.correcta !== null ? 'Respuesta del alumno: ' : 'Resultado: '}</span>
+                    <span className="numero text-primario">{ev.resultado_exacto}</span>
                   </p>
                   {ev.error !== null && (
                     <p className="m-0">
@@ -125,7 +131,7 @@ export function PanelDocente({ onCerrar, matriculaInicial = '' }: { onCerrar: ()
                 </div>
                 <div className="grid gap-4 p-4 lg:grid-cols-3">
                   <Imagen titulo="Foto del procedimiento" url={ev.foto_procedimiento_url} />
-                  <Imagen titulo="Gráfica calculada" url={ev.foto_canvas_url} />
+                  {ev.foto_canvas_url && <Imagen titulo="Gráfica calculada" url={ev.foto_canvas_url} />}
                   <div className="min-w-0">
                     <TablaDesdeFilas filas={ev.iteraciones_json} />
                   </div>

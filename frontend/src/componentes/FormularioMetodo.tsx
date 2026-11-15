@@ -45,7 +45,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
         <input
           {...comunes}
           type="checkbox"
-          className="size-5 accent-cian"
+          className="size-5 accent-primario"
           checked={Boolean(valor)}
           onChange={(e) => onCambio(e.target.checked)}
         />

@@ -8,15 +8,15 @@ interface Props {
   ancho?: 'sm' | 'md' | 'lg' | 'xl';
   /** En móvil todos pasan a pantalla completa; `completo` lo fuerza también en escritorio. */
   completo?: boolean;
-  acento?: 'cian' | 'hostil' | 'escudo' | 'ambar';
+  acento?: 'primario' | 'hostil' | 'escudo' | 'ambar';
   children: ReactNode;
 }
 
 const ANCHOS = { sm: 'sm:max-w-lg', md: 'sm:max-w-2xl', lg: 'sm:max-w-4xl', xl: 'sm:max-w-6xl' } as const;
-const ACENTOS = { cian: 'border-t-cian', hostil: 'border-t-hostil', escudo: 'border-t-escudo', ambar: 'border-t-ambar' } as const;
+const ACENTOS = { primario: 'border-t-primario', hostil: 'border-t-hostil', escudo: 'border-t-escudo', ambar: 'border-t-ambar' } as const;
 
 /** Diálogo modal nativo (<dialog>): foco atrapado, Esc cierra, fondo bloqueado. */
-export function Dialogo({ titulo, subtitulo, onCerrar, ancho = 'md', completo = false, acento = 'cian', children }: Props) {
+export function Dialogo({ titulo, subtitulo, onCerrar, ancho = 'md', completo = false, acento = 'primario', children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const idTitulo = useId();
 
@@ -37,7 +37,7 @@ export function Dialogo({ titulo, subtitulo, onCerrar, ancho = 'md', completo = 
       onClick={(e) => {
         if (e.target === e.currentTarget && onCerrar) onCerrar();
       }}
-      className={`m-auto flex-col overflow-hidden border border-t-2 border-linea ${ACENTOS[acento]} bg-panel p-0 text-tinta shadow-2xl shadow-black/60 open:flex animate-aparecer
+      className={`m-auto flex-col overflow-hidden border border-t-2 border-linea ${ACENTOS[acento]} bg-panel p-0 text-tinta shadow-2xl shadow-[#22302d]/20 open:flex animate-aparecer
         max-sm:h-dvh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:rounded-none
         sm:w-[calc(100vw-2rem)] sm:rounded-xl ${completo ? 'sm:h-[calc(100dvh-2rem)] sm:max-h-none sm:max-w-[min(100rem,calc(100vw-2rem))]' : `sm:max-h-[calc(100dvh-2rem)] ${ANCHOS[ancho]}`}`}
     >

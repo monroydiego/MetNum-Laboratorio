@@ -261,7 +261,7 @@ export function actualizar(m: Mundo, dt: number, teclas: ReadonlySet<string>, ct
 
 export function disparar(m: Mundo, ctx: ContextoSala): Evento[] {
   if (!ctx.sala.esJefe || ctx.omegaVida <= 0) return [];
-  if (!ctx.escudosCaidos) return [{ tipo: 'aviso', texto: 'Primero desactiva los 3 escudos de OMEGA en sus consolas.' }];
+  if (!ctx.escudosCaidos) return [{ tipo: 'aviso', texto: `Primero desactiva los ${ctx.sala.consolas.length} escudos de OMEGA en sus módulos.` }];
   if (m.enfriamientoDisparo > 0) return [];
   m.enfriamientoDisparo = ENFRIAMIENTO_DISPARO;
   m.disparos.push({ x: m.jugador.x + 25, y: m.jugador.y });

@@ -18,7 +18,7 @@ def obtener_caso_uso() -> GestionarEvidencia:
     return GestionarEvidencia(SQLiteEvidenciaRepo(), LocalFileStorage())
 
 
-def _a_salida(g: EvidenciaGuardada) -> EvidenciaOut:
+def a_salida(g: EvidenciaGuardada) -> EvidenciaOut:
     e = g.evidencia
     return EvidenciaOut(
         id=g.id,
@@ -31,11 +31,12 @@ def _a_salida(g: EvidenciaGuardada) -> EvidenciaOut:
         iteraciones_json=e.iteraciones,
         foto_procedimiento_url=e.foto_procedimiento_url,
         foto_canvas_url=e.foto_canvas_url,
+        correcta=e.correcta,
         fecha_registro=g.fecha_registro,
     )
 
 
-async def _imagen(archivo: UploadFile) -> ImagenSubida:
+async def imagen_subida(archivo: UploadFile) -> ImagenSubida:
     return ImagenSubida(contenido=await archivo.read(), tipo_mime=archivo.content_type or "")
 
 
@@ -68,10 +69,10 @@ async def enviar_evidencia(
         resultado_exacto=resultado_exacto,
         error=valor_error,
         iteraciones=filas,
-        foto_procedimiento=await _imagen(foto_procedimiento),
-        foto_canvas=await _imagen(foto_canvas),
+        foto_procedimiento=await imagen_subida(foto_procedimiento),
+        foto_canvas=await imagen_subida(foto_canvas),
     )
-    return _a_salida(guardada)
+    return a_salida(guardada)
 
 
 @router.get("", response_model=list[EvidenciaOut])
@@ -80,4 +81,4 @@ def listar_evidencias(
     matricula: str | None = None,
     caso_uso: GestionarEvidencia = Depends(obtener_caso_uso),
 ) -> list[EvidenciaOut]:
-    return [_a_salida(g) for g in caso_uso.listar(limite, matricula)]
+    return [a_salida(g) for g in caso_uso.listar(limite, matricula)]

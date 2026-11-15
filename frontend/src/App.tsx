@@ -1,6 +1,6 @@
 // Raíz de la aplicación: pantallas del juego, modales globales y atajos T/H/M.
 import { useCallback, useEffect, useState } from 'react';
-import { ClipboardList, FlaskConical, HelpCircle, Map as IconoMapa, Volume2, VolumeX } from 'lucide-react';
+import { ClipboardList, DoorOpen, FlaskConical, HelpCircle, Map as IconoMapa, Volume2, VolumeX } from 'lucide-react';
 import { ProveedorCatalogo } from './catalogo/ProveedorCatalogo';
 import { guardarSonidoActivo, useEstadoJuego } from './juego/estado';
 import { fijarSonido, sonar, sonidoActivo } from './juego/sonido';
@@ -98,37 +98,57 @@ function Juego() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-linea bg-panel/70 px-4 py-2.5 sm:px-6">
-        <button type="button" className="flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-tinta" onClick={() => setPantalla('inicio')}>
-          <FlaskConical size={22} className="text-cian" aria-hidden />
-          <span className="font-display text-base leading-tight font-semibold sm:text-xl">Escape del Laboratorio Numérico II</span>
-        </button>
-        <nav className="ml-auto flex flex-wrap gap-1" aria-label="Herramientas">
-          {pantalla === 'sala' && (
-            <button type="button" className="btn btn-fantasma" onClick={() => setPantalla('mapa')}>
-              <IconoMapa size={16} aria-hidden /> <span className="max-sm:sr-only">Plano</span>
+      <header className="sticky top-0 z-30 border-b border-linea bg-panel/85 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[100rem] flex-wrap items-center gap-x-5 gap-y-2 px-3 py-2.5 sm:px-6">
+          <button type="button" className="flex cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-left text-tinta" onClick={() => setPantalla('inicio')}>
+            <span className="grid size-9 place-items-center rounded-xl bg-primario text-white shadow-sm">
+              <FlaskConical size={20} aria-hidden />
+            </span>
+            <span className="font-display text-base leading-tight font-semibold max-sm:sr-only sm:text-lg">Laboratorio Numérico II</span>
+          </button>
+
+          {/* Navegación del juego: plano y sala actual, como pestañas. */}
+          <nav className="flex gap-1 rounded-full bg-panel-2 p-1" aria-label="Juego">
+            {(['mapa', 'sala'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                aria-current={pantalla === p ? 'page' : undefined}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-full border-0 px-3.5 py-1.5 font-display text-sm font-semibold transition-colors ${
+                  pantalla === p ? 'bg-panel text-primario shadow-sm' : 'bg-transparent text-tenue hover:text-tinta'
+                }`}
+                onClick={() => (p === 'sala' ? entrar(estado.salaActual) : setPantalla('mapa'))}
+              >
+                {p === 'mapa' ? <IconoMapa size={15} aria-hidden /> : <DoorOpen size={15} aria-hidden />}
+                {p === 'mapa' ? 'Plano' : 'Sala'}
+              </button>
+            ))}
+          </nav>
+
+          {/* Herramientas: docentes a la izquierda, preferencias a la derecha. */}
+          <div className="ml-auto flex items-center gap-1">
+            <button type="button" className="btn btn-fantasma" onClick={() => setModal('profesor')} title="Modo profesor (T)">
+              <FlaskConical size={16} aria-hidden /> <span className="max-md:sr-only">Modo profesor</span>
             </button>
-          )}
-          <button type="button" className="btn btn-fantasma" onClick={() => setModal('profesor')} title="Modo profesor (T)">
-            <FlaskConical size={16} aria-hidden /> <span className="max-sm:sr-only">Modo profesor</span>
-          </button>
-          <button type="button" className="btn btn-fantasma" onClick={() => setModal('docente')}>
-            <ClipboardList size={16} aria-hidden /> <span className="max-sm:sr-only">Panel Docente</span>
-          </button>
-          <button type="button" className="btn btn-fantasma" onClick={() => setModal('ayuda')} title="Ayuda (H)">
-            <HelpCircle size={16} aria-hidden /> <span className="sr-only">Ayuda</span>
-          </button>
-          <button
-            type="button"
-            className="btn btn-fantasma"
-            onClick={alternarSonido}
-            aria-pressed={sonido}
-            title={sonido ? 'Silenciar (M)' : 'Activar sonido (M)'}
-          >
-            {sonido ? <Volume2 size={16} aria-hidden /> : <VolumeX size={16} aria-hidden />}
-            <span className="sr-only">Sonido</span>
-          </button>
-        </nav>
+            <button type="button" className="btn btn-fantasma" onClick={() => setModal('docente')}>
+              <ClipboardList size={16} aria-hidden /> <span className="max-md:sr-only">Panel Docente</span>
+            </button>
+            <span className="mx-1 h-6 w-px bg-linea" aria-hidden />
+            <button type="button" className="btn btn-fantasma px-2.5" onClick={() => setModal('ayuda')} title="Ayuda (H)">
+              <HelpCircle size={18} aria-hidden /> <span className="sr-only">Ayuda</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-fantasma px-2.5"
+              onClick={alternarSonido}
+              aria-pressed={sonido}
+              title={sonido ? 'Silenciar (M)' : 'Activar sonido (M)'}
+            >
+              {sonido ? <Volume2 size={18} aria-hidden /> : <VolumeX size={18} aria-hidden />}
+              <span className="sr-only">Sonido</span>
+            </button>
+          </div>
+        </div>
       </header>
       <main className="mx-auto w-full max-w-[100rem] flex-1 px-3 py-4 sm:px-6 sm:py-6">
         {pantalla === 'mapa' && <MapaSector estado={estado} onEntrar={entrar} />}
@@ -137,7 +157,6 @@ function Juego() {
             estado={estado}
             despachar={despachar}
             pausaExterna={modal !== null}
-            onMapa={() => setPantalla('mapa')}
             onVictoria={() => setPantalla('victoria')}
             avisar={avisar}
           />

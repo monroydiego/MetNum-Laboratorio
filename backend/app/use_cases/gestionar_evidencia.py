@@ -1,4 +1,8 @@
-"""Modo Comprobación Docente: guarda las dos imágenes en disco y registra la evidencia en la BD."""
+"""Modo Comprobación Docente: guarda las imágenes en disco y registra la evidencia en la BD.
+
+También registra cada INTENTO de respuesta del juego: para verificar una respuesta el alumno debe subir
+forzosamente la foto de su procedimiento hecho a mano, que queda guardada para que el docente la revise.
+"""
 from dataclasses import dataclass
 
 from app.domain.entities import EvidenciaPartida
@@ -7,6 +11,12 @@ from app.domain.repositories import EvidenciaGuardada, IEvidenciaRepo, IFileStor
 
 TIPOS_IMAGEN = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 TAMANO_MAXIMO = 8 * 1024 * 1024  # 8 MB por imagen
+# Firma (primeros bytes) de cada formato: evita que se suba cualquier archivo renombrado como imagen.
+_FIRMAS = {
+    "png": (bytes.fromhex("89504e470d0a1a0a"),),
+    "jpg": (bytes.fromhex("ffd8ff"),),
+    "webp": (b"RIFF",),
+}
 
 
 @dataclass(frozen=True)
@@ -22,7 +32,10 @@ def _extension(imagen: ImagenSubida, nombre: str) -> str:
         raise ErrorMetodo(f"{nombre}: el archivo está vacío.")
     if len(imagen.contenido) > TAMANO_MAXIMO:
         raise ErrorMetodo(f"{nombre}: supera 8 MB.")
-    return TIPOS_IMAGEN[imagen.tipo_mime]
+    extension = TIPOS_IMAGEN[imagen.tipo_mime]
+    if not imagen.contenido.startswith(_FIRMAS[extension]) or (extension == "webp" and imagen.contenido[8:12] != b"WEBP"):
+        raise ErrorMetodo(f"{nombre}: el archivo no es una imagen {extension.upper()} válida.")
+    return extension
 
 
 class GestionarEvidencia:
@@ -67,6 +80,42 @@ class GestionarEvidencia:
         except Exception:
             self._almacen.eliminar(ruta_proc)
             self._almacen.eliminar(ruta_canvas)
+            raise
+
+    def registrar_intento(
+        self,
+        *,
+        matricula: str,
+        nivel: int,
+        metodo: str,
+        funcion: str,
+        respuesta: str,
+        correcta: bool,
+        iteraciones: list[dict[str, str | None]],
+        foto_procedimiento: ImagenSubida,
+    ) -> EvidenciaGuardada:
+        """Intento de respuesta del juego (correcto o no) con la foto OBLIGATORIA del procedimiento."""
+        if not matricula.strip():
+            raise ErrorMetodo("Escribe tu matrícula para registrar tu procedimiento.")
+        ext = _extension(foto_procedimiento, "Foto del procedimiento")
+        ruta = self._almacen.guardar(foto_procedimiento.contenido, ext)
+        try:
+            return self._repo.guardar(
+                EvidenciaPartida(
+                    matricula=matricula.strip(),
+                    nivel=nivel,
+                    metodo=metodo,
+                    funcion=funcion,
+                    resultado_exacto=respuesta,
+                    error=None,
+                    iteraciones=iteraciones,
+                    foto_procedimiento_url=ruta,
+                    foto_canvas_url="",
+                    correcta=correcta,
+                )
+            )
+        except Exception:
+            self._almacen.eliminar(ruta)
             raise
 
     def listar(self, limite: int = 50, matricula: str | None = None) -> list[EvidenciaGuardada]:

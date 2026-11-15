@@ -1,4 +1,6 @@
 // Dibujo de la sala en Canvas 2D. Todo el arte se genera al vuelo, sin archivos externos.
+// Estilo: laboratorio claro (pared de azulejo, piso de loseta, mesas de trabajo y cristalería).
+// El personaje, los drones centinela y los módulos de problemas conservan su diseño original.
 import { ANCHO_SALA as W, ALTO_SALA as H } from '../mapa';
 import { color, conAlfa, fuente } from '../../tokens';
 import { cercaPuerta, OMEGA_X, type ContextoSala, type Mundo } from './logica';
@@ -64,50 +66,95 @@ function recortar(c: Ctx, t: string, max: number, tam: number): string {
   return s + '…';
 }
 
+/** Matraz Erlenmeyer decorativo con líquido de color. */
+function matraz(c: Ctx, x: number, y: number, alto: number, liquido: string, nivel: number) {
+  const cuello = alto * 0.38;
+  const base = alto * 0.62;
+  c.beginPath();
+  c.moveTo(x - 5, y);
+  c.lineTo(x - 5, y + cuello);
+  c.lineTo(x - base * 0.62, y + alto);
+  c.lineTo(x + base * 0.62, y + alto);
+  c.lineTo(x + 5, y + cuello);
+  c.lineTo(x + 5, y);
+  c.closePath();
+  c.fillStyle = '#ffffffcc';
+  c.fill();
+  c.save();
+  c.clip();
+  c.fillStyle = conAlfa(liquido, 0.75);
+  c.fillRect(x - base, y + alto * (1 - nivel), base * 2, alto * nivel);
+  c.restore();
+  c.strokeStyle = '#9aa8a2';
+  c.lineWidth = 1.5;
+  c.stroke();
+  rr(c, x - 7, y - 3, 14, 4, 2, '#9aa8a2');
+}
+
+/** Tubo de ensayo en su gradilla. */
+function tubo(c: Ctx, x: number, y: number, liquido: string, nivel: number) {
+  rr(c, x - 4, y, 8, 30, 4, '#ffffffcc', '#9aa8a2', 1.2);
+  rr(c, x - 3, y + 30 - 28 * nivel, 6, 28 * nivel - 1, 3, conAlfa(liquido, 0.8));
+}
+
 function fondo(c: Ctx, sala: ContextoSala['sala'], v: Vista) {
-  c.fillStyle = '#0a1520';
+  // Pared del laboratorio (azulejo claro).
+  c.fillStyle = '#e7ebe6';
   c.fillRect(0, 0, W, H);
-  rr(c, 20, 95, 1040, 454, 18, '#0d1f2b', '#2f4c5a', 2);
+  for (let x = 0; x < W; x += 36) linea(c, x, 0, x, 92, '#dbe1da', 1);
+  for (let y = 18; y < 92; y += 18) linea(c, 0, y, W, y, '#dbe1da', 1);
+  // Rótulo de la sala sobre la pared.
+  rr(c, 20, 20, 8, 52, 4, v.acento);
+  texto(c, sala.nombre, 40, 52, 26, color.tinta, '700');
+  texto(c, sala.esJefe ? 'Desactiva los escudos y enfrenta al núcleo OMEGA' : 'Resuelve todos los módulos para abrir la salida', 41, 73, 12, color.tenue, '500');
+  // Repisa con matraces y gradilla con tubos de ensayo.
+  const liquidos = [v.acento, color.ambar, '#5f9fd6', color.escudo, color.menta];
+  rr(c, 610, 76, 260, 8, 3, '#c9bfae', '#b3a891');
+  for (let i = 0; i < 5; i++) matraz(c, 640 + i * 52, 34, 42, liquidos[i], 0.35 + ((i * 37) % 40) / 100);
+  rr(c, 892, 66, 146, 14, 4, '#d8cfbf', '#b3a891');
+  for (let i = 0; i < 7; i++) tubo(c, 905 + i * 20, 40, liquidos[(i + 2) % liquidos.length], 0.3 + ((i * 23) % 50) / 100);
+
+  // Piso de loseta.
+  rr(c, 20, 95, 1040, 454, 18, '#f5f6f2', '#c9cfc7', 2);
   c.save();
   c.beginPath();
-  c.roundRect(21, 95, 1038, 452, 17);
+  c.roundRect(21, 96, 1038, 452, 17);
   c.clip();
-  for (let y = 100; y < 545; y += 47) linea(c, 20, y, 1060, y, '#1c3442', 0.8);
-  for (let x = 25; x < 1060; x += 47) linea(c, x, 95, x, 548, '#1c3442', 0.8);
-  for (let x = 48; x < 1060; x += 220) {
-    brillo(c, x, 115, 130, v.acento, 0.05);
-    brillo(c, x, 540, 110, v.acento, 0.06);
-  }
+  for (let y = 100; y < 548; y += 47) linea(c, 20, y, 1060, y, '#e4e8e2', 1);
+  for (let x = 25; x < 1060; x += 47) linea(c, x, 95, x, 548, '#e4e8e2', 1);
+  brillo(c, 540, 330, 520, v.acento, 0.05);
   c.restore();
-  // Vigas superior e inferior.
-  rr(c, 20, 95, 1040, 27, 4, '#14283a', '#2f4c5a');
-  rr(c, 20, 524, 1040, 24, 4, '#14283a', '#2f4c5a');
+  // Mesas de trabajo (superior e inferior), donde se apoyan los módulos.
+  rr(c, 20, 95, 1040, 27, 6, '#dcd3c4', '#c2b6a1');
+  rr(c, 20, 524, 1040, 24, 6, '#dcd3c4', '#c2b6a1');
   for (let x = 65; x < 1020; x += 135) {
-    rr(c, x, 108, 65, 5, 2, '#33606a');
-    rr(c, x, 534, 65, 4, 2, '#2b505c');
+    rr(c, x, 105, 65, 6, 3, '#c7bba6');
+    rr(c, x, 533, 65, 5, 3, '#c7bba6');
   }
-  // Monitores de fondo con onda.
-  for (let i = 0; i < 3; i++) {
-    const x = 120 + i * 425;
-    rr(c, x, 305, 95, 69, 8, '#0c1f2c', '#2c4a58');
-    rr(c, x + 12, 319, 71, 36, 4, '#11293a', '#386675');
-    c.strokeStyle = conAlfa(v.acento, 0.55);
-    c.lineWidth = 2;
-    c.beginPath();
-    for (let k = 0; k < 16; k++) {
-      const xx = x + 13 + k * 4.5;
-      const yy = 336 + Math.sin(k * 0.75 + v.reloj * 1.7 + i) * 9;
-      if (k) c.lineTo(xx, yy);
-      else c.moveTo(xx, yy);
+  // Pasillo de seguridad de la entrada a la salida, con franjas de precaución.
+  rr(c, 50, 294, 958, 94, 13, conAlfa(v.acento, 0.07), conAlfa(v.acento, 0.25));
+  for (let x = 60; x < 1000; x += 24) {
+    rr(c, x, 297, 12, 4, 2, conAlfa(color.ambar, 0.4));
+    rr(c, x, 381, 12, 4, 2, conAlfa(color.ambar, 0.4));
+  }
+  if (!sala.esJefe) {
+    // Flechas guía hacia la salida.
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    for (let x = 210; x < 960; x += 160) {
+      c.beginPath();
+      c.moveTo(x, 328);
+      c.lineTo(x + 13, 341);
+      c.lineTo(x, 354);
+      c.strokeStyle = conAlfa(v.acento, 0.35);
+      c.lineWidth = 4;
+      c.stroke();
     }
-    c.stroke();
+    c.lineCap = 'butt';
+    c.lineJoin = 'miter';
   }
-  // Pasillo guía.
-  rr(c, 50, 294, 958, 94, 13, '#0e2330a9', '#21414f');
-  linea(c, 47, 341, 1005, 341, conAlfa(v.acento, 0.24), 2);
-  if (!sala.esJefe) for (let x = 912; x < 1035; x += 27) rr(c, x, 328, 15, 3, 2, conAlfa(v.acento, 0.3));
-  // Encabezado (a la derecha: la esquina izquierda la ocupa el HUD).
-  texto(c, sala.nombre, 1040, 68, 15, v.acento, '700', 'right');
+  // Entrada (punto de control del traje).
+  rr(c, 24, 300, 22, 82, 6, '#ffffff', '#c9cfc7', 1.5);
 }
 
 function consola(c: Ctx, ctx: ContextoSala, v: Vista, i: number) {
@@ -116,21 +163,26 @@ function consola(c: Ctx, ctx: ContextoSala, v: Vista, i: number) {
   const hecha = ctx.resueltos.has(con.slug);
   const cerca = v.cercana === i;
   const disponible = v.disponibles[i];
-  const extra = con.tipo === 'extra' || con.tipo === 'consulta';
-  const esc = extra ? 0.72 : 1;
-  const acento = con.tipo === 'escudo' ? color.escudo : extra ? color.ambar : v.acento;
-  const col = hecha ? color.menta : disponible ? acento : '#4d6676';
+  const esc = ctx.sala.esJefe ? 0.86 : 1;
+  const acento = con.tipo === 'escudo' ? color.escudo : v.acento;
+  const col = hecha ? color.menta : disponible ? acento : '#8a9a94';
   const pulso = (Math.sin(v.reloj * 3.2 + i * 2) + 1) / 2;
 
+  // Sombra del módulo sobre el piso.
+  c.beginPath();
+  c.ellipse(x, y + 52 * esc, 86 * esc, 10 * esc, 0, 0, Math.PI * 2);
+  c.fillStyle = '#22302d22';
+  c.fill();
   brillo(c, x, y, 96 * esc, col, disponible ? 0.08 + 0.08 * pulso : 0.04);
+  // Módulo (mismo diseño de siempre: monitor con onda, indicadores y base).
   c.save();
   c.translate(x, y);
   c.scale(esc, esc);
   rr(c, -76, 32, 152, 22, 4, '#07141e', '#3a5866');
   rr(c, -81, -49, 162, 90, 8, '#172a38', '#4f6c7a', 1.5);
   rr(c, -69, -36, 138, 68, 6, hecha ? '#133430' : '#0f2531', hecha ? '#6ee5a4' : conAlfa(col, 0.7), 1);
-  for (let k = 0; k < 3; k++) rr(c, -58 + k * 10, -26, 5, 5, 1, hecha ? color.menta : k === 1 ? col : '#2f5562');
-  c.strokeStyle = col;
+  for (let k = 0; k < 3; k++) rr(c, -58 + k * 10, -26, 5, 5, 1, hecha ? '#6ee5a4' : k === 1 ? col : '#2f5562');
+  c.strokeStyle = hecha ? '#6ee5a4' : col;
   c.lineWidth = 2;
   c.beginPath();
   for (let k = 0; k <= 32; k++) {
@@ -141,13 +193,13 @@ function consola(c: Ctx, ctx: ContextoSala, v: Vista, i: number) {
   }
   c.stroke();
   rr(c, -28, 41, 56, 7, 3, hecha ? '#53c89b' : '#4c6f7c');
-  rr(c, -81, -75, 162, 23, 5, hecha ? '#143a33' : '#1a3340', hecha ? '#438a65' : '#35606d');
+  // Placa del nombre (clara, para leerse sobre el laboratorio).
+  rr(c, -81, -75, 162, 23, 6, hecha ? '#e4f3ea' : '#ffffff', hecha ? color.menta : conAlfa(col, 0.65), 1.5);
   c.restore();
 
   const etiqueta = recortar(c, v.etiquetas[i] ?? con.slug, 128 * esc, 11);
-  texto(c, etiqueta, x - 70 * esc, y - 58 * esc, 11, hecha ? '#b1ffd4' : disponible ? '#d5f1f8' : '#8399a6', '600');
-  texto(c, hecha ? '✓' : cerca ? 'E' : disponible ? '●' : '–', x + 68 * esc, y - 58 * esc, 13, hecha ? color.menta : cerca ? color.ambar : '#6b9dac', '700', 'center');
-  if (extra) texto(c, con.tipo === 'consulta' ? 'Consulta' : 'Opcional', x, y + 62 * esc, 10, color.ambar, '600', 'center');
+  texto(c, etiqueta, x - 70 * esc, y - 58 * esc, 11, hecha ? color.menta : disponible ? color.tinta : color.tenue, '600');
+  texto(c, hecha ? '✓' : cerca ? 'E' : disponible ? '●' : '–', x + 68 * esc, y - 58 * esc, 13, hecha ? color.menta : cerca ? color.ambar : col, '700', 'center');
 
   if (cerca) {
     c.strokeStyle = col;
@@ -155,9 +207,9 @@ function consola(c: Ctx, ctx: ContextoSala, v: Vista, i: number) {
     c.setLineDash([5, 4]);
     c.strokeRect(x - 88 * esc, y - 82 * esc, 176 * esc, 140 * esc);
     c.setLineDash([]);
-    const yb = y + (extra ? 70 : 61);
-    rr(c, x - 52, yb, 104, 24, 5, '#072a32', color.cian);
-    texto(c, disponible ? 'Pulsa E' : 'Sin método', x, yb + 16, 11, '#d6fff8', '700', 'center');
+    const yb = y + 61 * esc;
+    rr(c, x - 52, yb, 104, 24, 12, color.primario);
+    texto(c, disponible ? 'Pulsa E' : 'Sin método', x, yb + 16, 11, '#ffffff', '700', 'center');
   }
 }
 
@@ -167,17 +219,17 @@ function puerta(c: Ctx, m: Mundo, ctx: ContextoSala) {
   const col = abierta ? color.menta : color.hostil;
   const x = 1001;
   const y = 242;
-  brillo(c, x + 34, y + 88, 110, col, abierta ? 0.25 : 0.13);
-  rr(c, x, y, 68, 182, 8, '#0c1c29', '#45616f', 3);
-  rr(c, x + 10, y + 13, 48, 154, 5, abierta ? '#113e39' : '#382534', col, 2);
-  for (let k = 0; k < 4; k++) linea(c, x + 17, y + 27 + k * 41, x + 53, y + 27 + k * 41, conAlfa(col, 0.56), 2);
-  rr(c, x - 40, y + 59, 34, 48, 6, '#192d39', '#55717b');
+  brillo(c, x + 34, y + 88, 110, col, abierta ? 0.22 : 0.1);
+  rr(c, x, y, 68, 182, 8, '#e9ece8', '#9eaaa5', 3);
+  rr(c, x + 10, y + 13, 48, 154, 5, abierta ? '#dff2e6' : '#f7e4e1', col, 2);
+  for (let k = 0; k < 4; k++) linea(c, x + 17, y + 27 + k * 41, x + 53, y + 27 + k * 41, conAlfa(col, 0.5), 2);
+  rr(c, x - 40, y + 59, 34, 48, 6, '#ffffff', '#9eaaa5');
   c.beginPath();
   c.arc(x - 23, y + 74, 7, 0, Math.PI * 2);
   c.fillStyle = col;
   c.fill();
-  texto(c, abierta ? 'Salida abierta' : 'Salida bloqueada', x + 34, y - 12, 11, abierta ? col : '#f0a3a8', '700', 'center');
-  if (abierta) texto(c, 'F', x + 34, y + 100, 22, '#f1fff9', '700', 'center');
+  texto(c, abierta ? 'Salida abierta' : 'Salida bloqueada', x + 34, y - 12, 11, col, '700', 'center');
+  if (abierta) texto(c, 'F', x + 34, y + 100, 22, color.menta, '700', 'center');
   if (cercaPuerta(m, ctx.sala)) {
     c.strokeStyle = col;
     c.setLineDash([5, 4]);
@@ -187,6 +239,7 @@ function puerta(c: Ctx, m: Mundo, ctx: ContextoSala) {
   }
 }
 
+// ---- Personaje (diseño original, sin cambios) ----
 function jugador(c: Ctx, m: Mundo, v: Vista) {
   const { x, y, moviendo, paso } = m.jugador;
   const rebote = moviendo ? Math.sin(paso) * 2.3 : Math.sin(v.reloj * 3) * 1.2;
@@ -194,7 +247,7 @@ function jugador(c: Ctx, m: Mundo, v: Vista) {
   if (m.invulnerable > 0 && Math.floor(m.invulnerable * 10) % 2 === 0) c.globalAlpha = 0.55;
   c.beginPath();
   c.ellipse(x, y + 19, 24, 8, 0, 0, Math.PI * 2);
-  c.fillStyle = '#010b1399';
+  c.fillStyle = '#010b1355';
   c.fill();
   rr(c, x - 14, y + 5 + rebote, 10, 19, 4, '#265d68', '#66a3a7');
   rr(c, x + 4, y + 5 - rebote, 10, 19, 4, '#265d68', '#66a3a7');
@@ -202,7 +255,7 @@ function jugador(c: Ctx, m: Mundo, v: Vista) {
   rr(c, x - 26, y - 12 + rebote, 10, 26, 5, '#417b85', '#78cad1');
   rr(c, x + 17, y - 12 + rebote, 10, 26, 5, '#417b85', '#78cad1');
   rr(c, x - 13, y - 12 + rebote, 26, 25, 7, '#25505d');
-  rr(c, x - 8, y - 6 + rebote, 16, 13, 4, color.cian);
+  rr(c, x - 8, y - 6 + rebote, 16, 13, 4, '#48e7d5');
   c.beginPath();
   c.arc(x, y - 27 + rebote, 22, 0, Math.PI * 2);
   c.fillStyle = '#e2f2ec';
@@ -219,11 +272,12 @@ function jugador(c: Ctx, m: Mundo, v: Vista) {
   c.fillStyle = '#84d9e0';
   c.fill();
   c.globalAlpha = 1;
-  texto(c, v.nombreJugador, x, y - 56 + rebote, 11, '#d6faff', '600', 'center');
+  texto(c, v.nombreJugador, x, y - 56 + rebote, 11, color.tinta, '600', 'center');
 }
 
+// ---- Dron centinela (diseño original, sin cambios) ----
 function dron(c: Ctx, d: Mundo['drones'][number]) {
-  brillo(c, d.x, d.y, 68, color.hostil, 0.16);
+  brillo(c, d.x, d.y, 68, '#ff7781', 0.16);
   c.save();
   c.translate(d.x, d.y);
   c.rotate(Math.sin(d.giro) * 0.12);
@@ -239,14 +293,14 @@ function dron(c: Ctx, d: Mundo['drones'][number]) {
   c.fillStyle = '#b32b68';
   c.fill();
   c.restore();
-  texto(c, 'Centinela', d.x, d.y - 27, 10, '#ffc3c7', '600', 'center');
+  texto(c, 'Centinela', d.x, d.y - 27, 10, color.hostil, '600', 'center');
 }
 
 function omega(c: Ctx, m: Mundo, ctx: ContextoSala, v: Vista) {
   const x = OMEGA_X;
   const y = m.omegaY;
   const vivo = ctx.omegaVida > 0;
-  brillo(c, x, y, 175, vivo ? color.omega : '#5c5665', vivo ? 0.26 : 0.12);
+  brillo(c, x, y, 175, vivo ? '#ff396d' : '#5c5665', vivo ? 0.2 : 0.1);
   c.save();
   c.translate(x, y);
   c.rotate(Math.sin(v.reloj * 0.7) * 0.08);
@@ -277,8 +331,9 @@ function omega(c: Ctx, m: Mundo, ctx: ContextoSala, v: Vista) {
   c.fillStyle = '#fff1e0';
   c.fill();
   c.restore();
-  texto(c, 'OMEGA', x, y - 105, 20, '#ffd2dd', '700', 'center');
+  texto(c, 'OMEGA', x, y - 105, 20, color.omega, '700', 'center');
   if (!ctx.escudosCaidos) {
+    const total = ctx.sala.consolas.length;
     const restantes = ctx.sala.consolas.filter((k) => !ctx.resueltos.has(k.slug)).length;
     c.beginPath();
     c.arc(x, y, 103 + Math.sin(v.reloj * 7) * 4, 0, Math.PI * 2);
@@ -287,17 +342,17 @@ function omega(c: Ctx, m: Mundo, ctx: ContextoSala, v: Vista) {
     c.setLineDash([12, 12]);
     c.stroke();
     c.setLineDash([]);
-    texto(c, `Escudos ${restantes}/3`, x, y + 122, 12, '#d5b4ff', '700', 'center');
+    texto(c, `Escudos ${restantes}/${total}`, x, y + 122, 12, color.escudo, '700', 'center');
   } else if (vivo) {
-    texto(c, `Núcleos ${ctx.omegaVida}/3`, x, y + 122, 12, '#ffc3cf', '700', 'center');
+    texto(c, `Núcleos ${ctx.omegaVida}/3`, x, y + 122, 12, color.omega, '700', 'center');
   }
   for (const z of m.lasers) {
-    brillo(c, z.x, z.y, 26, color.hostil, 0.35);
+    brillo(c, z.x, z.y, 26, '#ff7781', 0.35);
     rr(c, z.x - 20, z.y - 7, 40, 14, 7, '#e64b70', '#ffe0da');
   }
   for (const z of m.disparos) {
-    brillo(c, z.x, z.y, 25, color.cian, 0.4);
-    rr(c, z.x - 9, z.y - 5, 23, 10, 5, '#d9ffff', '#7dedfb');
+    brillo(c, z.x, z.y, 25, color.primario, 0.4);
+    rr(c, z.x - 9, z.y - 5, 23, 10, 5, '#d9ffff', '#2d7a67');
   }
 }
 
@@ -319,14 +374,14 @@ export function dibujarSala(c: Ctx, m: Mundo, ctx: ContextoSala, v: Vista): void
   }
   c.globalAlpha = 1;
   c.restore();
-  // Pantalla de daño: destello rojo + viñeta.
+  // Pantalla de daño: destello coral + viñeta.
   if (m.destello > 0) {
     const a = m.destello * 4;
-    c.fillStyle = `rgba(240,35,65,${a * 0.22})`;
+    c.fillStyle = `rgba(196,72,58,${a * 0.2})`;
     c.fillRect(0, 0, W, H);
     const g = c.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, W * 0.65);
-    g.addColorStop(0, 'rgba(255,57,109,0)');
-    g.addColorStop(1, `rgba(255,57,109,${a * 0.45})`);
+    g.addColorStop(0, 'rgba(196,72,58,0)');
+    g.addColorStop(1, `rgba(196,72,58,${a * 0.4})`);
     c.fillStyle = g;
     c.fillRect(0, 0, W, H);
   }

@@ -155,13 +155,13 @@ export function ModalComprobacion({ resultado, entrada, matriculaInicial, nivelI
               <h3 className="m-0 text-base">Foto del procedimiento</h3>
               <label
                 htmlFor={`${id}-foto`}
-                className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-cian-2 bg-panel-2/60 p-3 text-center text-sm text-tenue focus-within:outline-2 focus-within:outline-ambar"
+                className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-primario-2 bg-panel-2/60 p-3 text-center text-sm text-tenue focus-within:outline-2 focus-within:outline-ambar"
               >
                 {urlFoto ? (
                   <img src={urlFoto} alt="Vista previa del procedimiento" className="max-h-64 w-full rounded object-contain" />
                 ) : (
                   <>
-                    <Camera size={28} className="text-cian" aria-hidden />
+                    <Camera size={28} className="text-primario" aria-hidden />
                     <span>Toca para tomar la foto o elegir una imagen</span>
                   </>
                 )}

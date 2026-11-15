@@ -2,7 +2,10 @@ import type {
   EvidenciaDTO,
   EvidenciaFormCampos,
   MetodoInfoDTO,
+  ProblemaDTO,
   ResultadoNumericoDTO,
+  RevisionDTO,
+  VerificacionDTO,
 } from '../types/numericos';
 
 const BASE = '/api';
@@ -98,6 +101,42 @@ async function solicitar<T>(url: string, init?: RequestInit): Promise<T> {
 
 export function listarMetodos(): Promise<MetodoInfoDTO[]> {
   return solicitar<MetodoInfoDTO[]>(`${BASE}/metodos`);
+}
+
+/** Problema nuevo y distinto cada vez, con datos parecidos a los del libro que cumplen las restricciones del método. */
+export function obtenerProblema(slug: string): Promise<ProblemaDTO> {
+  return solicitar<ProblemaDTO>(`${BASE}/metodos/${encodeURIComponent(slug)}/problema`);
+}
+
+/** Revisa un problema guardado: si ya no cumple las restricciones del método, el servidor lo cambia por otro. */
+export function revisarProblema(slug: string, entrada: Record<string, unknown>): Promise<RevisionDTO> {
+  return solicitar<RevisionDTO>(`${BASE}/problemas/revisar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug, entrada }),
+  });
+}
+
+export interface DatosVerificacion {
+  slug: string;
+  entrada: Record<string, unknown>;
+  respuesta: Record<string, string>;
+  matricula: string;
+  nivel: number;
+  /** Foto OBLIGATORIA del procedimiento hecho a mano (queda guardada para el docente). */
+  foto: Blob;
+}
+
+/** Verifica lo que el alumno obtuvo a mano (parte entera y 3 decimales), junto con la foto de su procedimiento. */
+export function verificarRespuesta(d: DatosVerificacion): Promise<VerificacionDTO> {
+  const form = new FormData();
+  form.append('slug', d.slug);
+  form.append('entrada', JSON.stringify(d.entrada));
+  form.append('respuesta', JSON.stringify(d.respuesta));
+  form.append('matricula', d.matricula);
+  form.append('nivel', String(d.nivel));
+  form.append('foto_procedimiento', d.foto, d.foto instanceof File ? d.foto.name : 'procedimiento.png');
+  return solicitar<VerificacionDTO>(`${BASE}/problemas/verificar`, { method: 'POST', body: form });
 }
 
 export function calcular(slug: string, payload: Record<string, unknown>): Promise<ResultadoNumericoDTO> {

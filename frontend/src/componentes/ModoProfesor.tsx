@@ -68,7 +68,7 @@ export function ModoProfesor({ matricula, onCerrar, onEvidencia }: Props) {
           <div className="flex flex-col gap-4 overflow-y-auto pr-1">
             {grupos.map(([unidad, caps]) => (
               <section key={unidad} className="flex flex-col gap-2">
-                <h3 className="m-0 text-base text-cian">Unidad {ROMANOS[unidad] ?? unidad}</h3>
+                <h3 className="m-0 text-base text-primario">Unidad {ROMANOS[unidad] ?? unidad}</h3>
                 {[...caps.entries()].map(([cap, lista]) => (
                   <div key={cap} className="flex flex-col gap-1">
                     {cap && <h4 className="m-0 text-sm font-normal text-tenue">{cap}</h4>}

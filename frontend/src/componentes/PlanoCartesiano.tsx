@@ -107,7 +107,7 @@ export function PlanoCartesiano({ series, titulo, escalaY = 'lineal', etiquetaX 
     // Fondo opaco (la exportación PNG no queda transparente).
     c.fillStyle = color.panel;
     c.fillRect(0, 0, W, H);
-    c.fillStyle = '#0b151f';
+    c.fillStyle = color.panel2;
     c.fillRect(MARGEN.izq, MARGEN.sup, ancho, altoP);
 
     // Cuadrícula y marcas.

@@ -1,14 +1,17 @@
-// Pantalla de sala: canvas del juego + HUD + bitácora de la misión.
+// Pantalla de sala: encabezado + barra de estado + canvas del juego + bitácora de problemas.
 import { useCallback, useEffect, useMemo, useState, type Dispatch } from 'react';
-import { CheckCircle2, Circle, CircleDashed, Map as IconoMapa, Shield } from 'lucide-react';
+import { CheckCircle2, Circle, Shield } from 'lucide-react';
 import { JuegoCanvas, type Indicacion } from '../juego/JuegoCanvas';
 import { SALAS, indiceSala, nombreRespaldo, ROMANOS, type Consola, type Sala as SalaDef } from '../juego/mapa';
 import {
+  consecuenciaDano,
   escudosCaidos,
   progresoSala,
   requeridasResueltas,
   salaCompleta,
   TOTAL_REQUERIDAS,
+  VIDA_POR_RESPUESTA_INCORRECTA,
+  VIDAS_MAX,
   type Accion,
   type EstadoJuego,
 } from '../juego/estado';
@@ -24,14 +27,14 @@ interface Props {
   estado: EstadoJuego;
   despachar: Dispatch<Accion>;
   pausaExterna: boolean;
-  onMapa: () => void;
   onVictoria: () => void;
   avisar: (texto: string, tono?: TonoAviso) => void;
 }
 
-const ACENTOS: Record<number, string> = { 1: color.cian, 2: color.ambar, 3: color.menta, 4: color.escudo };
+const ACENTOS: Record<number, string> = { 1: color.primario, 2: color.azul, 3: color.ambar, 4: color.escudo };
+const MENSAJE_REINICIO = `Perdiste tus ${VIDAS_MAX} vidas: la sala se reinicia. Sus problemas cambian y vuelven a quedar sin resolver.`;
 
-export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avisar }: Props) {
+export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Props) {
   const sala = SALAS[indiceSala(estado.salaActual)];
   const { estado: estadoCatalogo, porSlug } = useCatalogo();
   const [consolaAbierta, setConsolaAbierta] = useState<number | null>(null);
@@ -61,7 +64,7 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
   function alPuerta() {
     if (!completa) {
       const { hechas, total } = progresoSala(estado, sala);
-      avisar(`Puerta bloqueada: resuelve las ${total - hechas} consolas que faltan para abrirla.`, 'peligro');
+      avisar(`Puerta bloqueada: faltan ${total - hechas} problemas por resolver (todos son obligatorios).`, 'peligro');
       sonar('error');
       return;
     }
@@ -79,15 +82,35 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
       const restantes = sala.consolas.filter((c) => c.slug !== consola.slug && !estado.resueltos.includes(c.slug)).length;
       avisar(restantes ? `Escudo desactivado. Quedan ${restantes}.` : 'Escudos abiertos: cierra el panel y dispara con Espacio.', 'exito');
     } else {
-      avisar(`${nombre(consola.slug)} resuelto: +7 de energía.`, 'exito');
+      avisar(`${nombre(consola.slug)} resuelto: +7 de vida.`, 'exito');
     }
   }
 
-  function alDano(cantidad: number, reaparece: boolean) {
+  /** Aviso común de daño (golpe o respuesta incorrecta) según lo que provoca en las vidas. */
+  function avisarDano(cantidad: number, motivo: string) {
+    const consecuencia = consecuenciaDano(estado, cantidad);
+    if (consecuencia === 'salaReiniciada') {
+      setConsolaAbierta(null);
+      avisar(MENSAJE_REINICIO, 'peligro');
+    } else if (consecuencia === 'vidaPerdida') {
+      const quedan = estado.vidas - 1;
+      avisar(`${motivo}: perdiste una vida. ${quedan === 1 ? 'Te queda 1 vida' : `Te quedan ${quedan} vidas`}.`, 'peligro');
+    } else {
+      avisar(`${motivo}: −${cantidad} de vida. Vida: ${Math.ceil(estado.energia - cantidad)}%`, 'peligro');
+    }
+  }
+
+  function alDano(cantidad: number) {
+    avisarDano(cantidad, sala.esJefe ? 'Rayo de OMEGA' : 'Golpe de un centinela');
     despachar({ tipo: 'dano', cantidad });
     sonar('dano');
-    if (reaparece) avisar('Traje restaurado en el punto de control. Tus métodos resueltos se conservan.', 'peligro');
-    else avisar(`Esquiva a los ${sala.esJefe ? 'rayos de OMEGA' : 'centinelas'}. Energía: ${Math.ceil(estado.energia - cantidad)}%`, 'peligro');
+  }
+
+  /** Respuesta incorrecta en una consola: resta 5 de vida (con las mismas reglas de las vidas). */
+  function alIncorrecta() {
+    avisarDano(VIDA_POR_RESPUESTA_INCORRECTA, 'Respuesta incorrecta');
+    despachar({ tipo: 'respuestaIncorrecta' });
+    sonar('dano');
   }
 
   function alImpacto() {
@@ -104,13 +127,34 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
 
   const consola = consolaAbierta !== null ? sala.consolas[consolaAbierta] : null;
   const global = requeridasResueltas(estado);
+  const { hechas, total } = progresoSala(estado, sala);
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-      <section aria-label={`Sala ${sala.nombre}`} className="flex min-w-0 flex-col gap-3">
-        <div className="relative">
+    <div className="flex flex-col gap-4">
+      {/* Encabezado de la sala: dónde estoy y a dónde puedo ir. */}
+      <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-1">
+          <p className="m-0 text-sm font-semibold tracking-wide text-tenue uppercase">
+            Sector {ROMANOS[sala.sector]} · Unidad {ROMANOS[sala.sector]} · Sala {indiceSala(sala.id) + 1} de {SALAS.length}
+          </p>
+          <h1 className="m-0 text-h2">{sala.nombre}</h1>
+          <p className="m-0 max-w-3xl text-tenue">{sala.descripcion}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="rounded-full bg-panel px-3 py-1.5 text-sm shadow-sm">
+            <span className="numero font-semibold">
+              {hechas}/{total}
+            </span>{' '}
+            problemas
+          </span>
+        </div>
+      </header>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
+        <section aria-label={`Sala ${sala.nombre}`} className="flex min-w-0 flex-col gap-3">
+          <Hud energia={estado.energia} vidas={estado.vidas} tiempoMs={estado.tiempoMs} omegaVida={sala.esJefe ? estado.omegaVida : null} />
           <JuegoCanvas
-            key={sala.id}
+            key={`${sala.id}-${estado.salasReiniciadas}`}
             sala={sala}
             resueltos={estado.resueltos}
             omegaVida={estado.omegaVida}
@@ -120,7 +164,7 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
             etiquetas={etiquetas}
             disponibles={disponibles}
             nombreJugador={estado.matricula || 'Agente'}
-            acento={sala.esJefe ? color.cian : ACENTOS[sala.sector]}
+            acento={ACENTOS[sala.sector]}
             pausado={pausado}
             onConsola={setConsolaAbierta}
             onPuerta={alPuerta}
@@ -130,35 +174,35 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
             onSonido={(s) => sonar(s)}
             onIndicacion={setIndicacion}
           />
-          <Hud energia={estado.energia} tiempoMs={estado.tiempoMs} omegaVida={sala.esJefe ? estado.omegaVida : null} />
-        </div>
-        <p className="m-0 flex min-h-10 flex-wrap items-center gap-2 rounded-lg border border-linea bg-panel px-3 py-2 text-sm" aria-live="polite">
-          {indicacion.tecla && <kbd className="kbd">{indicacion.tecla}</kbd>}
-          <span>{indicacion.texto}</span>
-          <span className="ml-auto hidden items-center gap-2 text-tenue lg:flex">
-            <kbd className="kbd">E</kbd> activar <kbd className="kbd">F</kbd> puerta
-            {sala.esJefe && (
-              <>
-                <kbd className="kbd">Espacio</kbd> disparar
-              </>
-            )}
-          </span>
-        </p>
-      </section>
+          <p className="tarjeta m-0 flex min-h-11 flex-wrap items-center gap-2 px-4 py-2 text-sm" aria-live="polite">
+            {indicacion.tecla && <kbd className="kbd">{indicacion.tecla}</kbd>}
+            <span>{indicacion.texto}</span>
+            <span className="ml-auto hidden items-center gap-2 text-tenue lg:flex">
+              <kbd className="kbd">E</kbd> activar <kbd className="kbd">F</kbd> puerta
+              {sala.esJefe && (
+                <>
+                  <kbd className="kbd">Espacio</kbd> disparar
+                </>
+              )}
+            </span>
+          </p>
+        </section>
 
-      <Bitacora sala={sala} estado={estado} nombre={nombre} disponibles={disponibles} global={global} onMapa={onMapa} />
+        <Bitacora sala={sala} estado={estado} nombre={nombre} disponibles={disponibles} global={global} />
+      </div>
 
       {historiaPendiente && (
         <Dialogo
           titulo={sala.historia.titulo}
           subtitulo={`${sala.nombre}, Sector ${ROMANOS[sala.sector]}`}
           ancho="sm"
-          acento={sala.esJefe ? 'hostil' : 'cian'}
+          acento={sala.esJefe ? 'hostil' : 'primario'}
           onCerrar={() => despachar({ tipo: 'historiaVista', sala: sala.id })}
         >
           <p className="mt-0 text-base">{sala.historia.texto}</p>
           <p className="text-sm text-tenue">
-            Muévete con <kbd className="kbd">WASD</kbd> o flechas, activa consolas con <kbd className="kbd">E</kbd> y cruza la puerta con <kbd className="kbd">F</kbd>.
+            Muévete con <kbd className="kbd">WASD</kbd> o flechas, activa los módulos con <kbd className="kbd">E</kbd> y cruza la puerta con <kbd className="kbd">F</kbd>.
+            Tienes {VIDAS_MAX} vidas de 100 puntos: si las pierdes todas, la sala se reinicia con problemas nuevos.
           </p>
           <div className="flex justify-end">
             <button type="button" className="btn btn-primario" autoFocus onClick={() => despachar({ tipo: 'historiaVista', sala: sala.id })}>
@@ -173,23 +217,27 @@ export function Sala({ estado, despachar, pausaExterna, onMapa, onVictoria, avis
           titulo={nombre(consola.slug)}
           subtitulo={
             consola.tipo === 'escudo'
-              ? 'Escudo de OMEGA: resuélvelo para desactivarlo.'
-              : consola.tipo === 'obligatoria'
-                ? `Consola de ${sala.nombre}`
-                : consola.tipo === 'consulta'
-                  ? 'Panel de consulta (opcional)'
-                  : 'Terminal opcional: no bloquea la puerta.'
+              ? 'Escudo de OMEGA: resuelve el problema a mano, sube la foto de tu procedimiento y escribe tu resultado.'
+              : `${sala.nombre}: resuelve el problema a mano, sube la foto de tu procedimiento y escribe tu resultado.`
           }
-          acento={consola.tipo === 'escudo' ? 'escudo' : 'cian'}
+          acento={consola.tipo === 'escudo' ? 'escudo' : 'primario'}
           completo
           onCerrar={() => setConsolaAbierta(null)}
         >
           <PanelMetodo
+            key={`${consola.slug}-${estado.salasReiniciadas}`}
             slug={consola.slug}
             modo="consola"
             matricula={estado.matricula}
             nivel={indiceSala(sala.id) + 1}
+            problema={estado.problemas[consola.slug]}
+            yaResuelto={estado.resueltos.includes(consola.slug)}
+            vida={estado.energia}
+            vidas={estado.vidas}
+            onProblema={(problema) => despachar({ tipo: 'problema', slug: consola.slug, problema })}
+            onIncorrecta={alIncorrecta}
             onResuelto={() => alResolver(consola)}
+            onMatricula={(m) => despachar({ tipo: 'matricula', valor: m })}
             onEvidencia={(_, m) => {
               if (!estado.matricula) despachar({ tipo: 'matricula', valor: m });
             }}
@@ -206,55 +254,42 @@ function Bitacora({
   nombre,
   disponibles,
   global,
-  onMapa,
 }: {
   sala: SalaDef;
   estado: EstadoJuego;
   nombre: (slug: string) => string;
   disponibles: boolean[];
   global: number;
-  onMapa: () => void;
 }) {
   const { hechas, total } = progresoSala(estado, sala);
   return (
-    <aside className="flex flex-col gap-5 rounded-xl border border-linea bg-panel p-5" aria-label="Bitácora de la misión">
-      <div className="flex flex-col gap-1">
-        <p className="m-0 text-sm text-tenue">
-          Sector {ROMANOS[sala.sector]}, Unidad {ROMANOS[sala.sector]}
-        </p>
-        <h2 className="m-0 text-h3">{sala.nombre}</h2>
-        <p className="m-0 text-sm text-tenue">{sala.descripcion}</p>
-      </div>
-
+    <aside className="tarjeta flex flex-col gap-5 p-5" aria-label="Bitácora de la misión">
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between">
-          <h3 className="m-0 text-base">{sala.esJefe ? 'Escudos' : 'Consolas de la sala'}</h3>
+          <h2 className="m-0 text-xl">{sala.esJefe ? 'Escudos de OMEGA' : 'Problemas de la sala'}</h2>
           <span className="numero text-sm">
             {hechas}/{total}
           </span>
         </div>
+        <p className="m-0 text-sm text-tenue">Todos son obligatorios para {sala.esJefe ? 'atacar a OMEGA' : 'abrir la puerta'}.</p>
         <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
           {sala.consolas.map((c, i) => {
             const hecha = estado.resueltos.includes(c.slug);
-            const opcional = c.tipo === 'extra' || c.tipo === 'consulta';
             return (
               <li
                 key={c.slug}
-                className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 text-sm ${
-                  hecha ? 'border-menta/40 text-menta' : 'border-linea'
+                className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm ${
+                  hecha ? 'border-menta/40 bg-menta/8 text-menta' : 'border-linea bg-panel-2'
                 } ${disponibles[i] ? '' : 'opacity-60'}`}
               >
                 {hecha ? (
-                  <CheckCircle2 size={16} aria-label="Resuelta" />
+                  <CheckCircle2 size={16} aria-label="Resuelto" />
                 ) : c.tipo === 'escudo' ? (
                   <Shield size={16} className="text-escudo" aria-label="Escudo activo" />
-                ) : opcional ? (
-                  <CircleDashed size={16} className="text-ambar" aria-label="Opcional" />
                 ) : (
                   <Circle size={16} className="text-tenue" aria-label="Pendiente" />
                 )}
                 <span className="min-w-0 flex-1">{nombre(c.slug)}</span>
-                {opcional && <span className="text-tenue">{c.tipo === 'consulta' ? 'consulta' : 'opcional'}</span>}
                 {!disponibles[i] && <span className="text-tenue">sin método</span>}
               </li>
             );
@@ -262,22 +297,20 @@ function Bitacora({
         </ul>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="mt-auto flex flex-col gap-2 border-t border-linea pt-4">
         <div className="flex items-baseline justify-between">
           <h3 className="m-0 text-base">Progreso de la misión</h3>
           <span className="numero text-sm">
             {global}/{TOTAL_REQUERIDAS}
           </span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-linea" role="progressbar" aria-label="Métodos obligatorios resueltos" aria-valuemin={0} aria-valuemax={TOTAL_REQUERIDAS} aria-valuenow={global}>
-          <div className="h-full rounded-full bg-cian" style={{ width: `${(global / TOTAL_REQUERIDAS) * 100}%` }} />
+        <div className="h-2 overflow-hidden rounded-full bg-linea" role="progressbar" aria-label="Problemas resueltos en toda la misión" aria-valuemin={0} aria-valuemax={TOTAL_REQUERIDAS} aria-valuenow={global}>
+          <div className="h-full rounded-full bg-primario" style={{ width: `${(global / TOTAL_REQUERIDAS) * 100}%` }} />
         </div>
-        <p className="m-0 text-sm text-tenue">Puntos: <span className="numero text-tinta">{estado.puntos}</span></p>
+        <p className="m-0 text-sm text-tenue">
+          Puntos: <span className="numero text-tinta">{estado.puntos}</span>
+        </p>
       </div>
-
-      <button type="button" className="btn mt-auto" onClick={onMapa}>
-        <IconoMapa size={16} aria-hidden /> Ver plano de la instalación
-      </button>
     </aside>
   );
 }

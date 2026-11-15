@@ -64,4 +64,6 @@ class EvidenciaPartida:
     error: float | None
     iteraciones: list[dict[str, str | None]]
     foto_procedimiento_url: str
-    foto_canvas_url: str
+    foto_canvas_url: str  # "" en los intentos de respuesta del juego (solo llevan la foto del procedimiento)
+    # Intento de respuesta del juego: True/False según la verificación; None = evidencia del Modo Comprobación.
+    correcta: bool | None = None

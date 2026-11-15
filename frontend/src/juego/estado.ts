@@ -2,27 +2,46 @@
 import { useEffect, useReducer } from 'react';
 import { SALAS, consolasRequeridas, indiceSala, type IdSala, type Sala, TOTAL_REQUERIDAS } from './mapa';
 
+/** Puntos de cada vida (barra de vida del traje). */
 export const ENERGIA_MAX = 100;
+/** Vidas del personaje: al agotarse las 5, se pierde el progreso de la sala actual. */
+export const VIDAS_MAX = 5;
 export const ENERGIA_POR_METODO = 7;
 export const VIDA_OMEGA = 3;
 
 const CLAVE = 'escapeLabNumerico2_deluxe_v3';
 const CLAVE_PREFS = 'escapeLabNumerico2_prefs';
 
+/** Problema asignado a una consola: se conserva hasta resolverlo (cerrar la consola no lo cambia). */
+export interface ProblemaAsignado {
+  entrada: Record<string, unknown>;
+  campos: string[];
+}
+
+export const VIDA_POR_RESPUESTA_INCORRECTA = 5;
+
 export interface EstadoJuego {
   version: 3;
   enCurso: boolean;
   matricula: string;
   salaActual: IdSala;
-  /** Slugs resueltos en modo juego (consolas, extras y escudos). */
+  /** Slugs resueltos en modo juego (consolas y escudos). */
   resueltos: string[];
   historiasVistas: IdSala[];
+  /** Puntos de la vida actual (0–100). */
   energia: number;
+  /** Vidas restantes (1–5), cada una de 100 puntos. */
+  vidas: number;
+  /** Veces que se agotaron las 5 vidas (cada vez se reinicia la sala con problemas nuevos). */
+  salasReiniciadas: number;
   omegaVida: number;
   puntos: number;
   tiempoMs: number;
   danosRecibidos: number;
   reapariciones: number;
+  respuestasIncorrectas: number;
+  /** Problema vigente de cada consola (slug -> problema). */
+  problemas: Record<string, ProblemaAsignado>;
   victoria: boolean;
 }
 
@@ -33,6 +52,8 @@ export type Accion =
   | { tipo: 'historiaVista'; sala: IdSala }
   | { tipo: 'resolver'; slug: string; esEscudo: boolean }
   | { tipo: 'dano'; cantidad: number }
+  | { tipo: 'problema'; slug: string; problema: ProblemaAsignado }
+  | { tipo: 'respuestaIncorrecta' }
   | { tipo: 'impactoOmega' }
   | { tipo: 'tiempo'; ms: number };
 
@@ -45,11 +66,15 @@ export function estadoInicial(matricula = ''): EstadoJuego {
     resueltos: [],
     historiasVistas: [],
     energia: ENERGIA_MAX,
+    vidas: VIDAS_MAX,
+    salasReiniciadas: 0,
     omegaVida: VIDA_OMEGA,
     puntos: 0,
     tiempoMs: 0,
     danosRecibidos: 0,
     reapariciones: 0,
+    respuestasIncorrectas: 0,
+    problemas: {},
     victoria: false,
   };
 }
@@ -80,15 +105,41 @@ export function requeridasResueltas(estado: Pick<EstadoJuego, 'resueltos'>): num
   return SALAS.reduce((n, s) => n + progresoSala(estado, s).hechas, 0);
 }
 
-export function extrasResueltas(estado: Pick<EstadoJuego, 'resueltos'>): number {
-  return SALAS.flatMap((s) => s.consolas)
-    .filter((c) => c.tipo === 'extra' || c.tipo === 'consulta')
-    .filter((c) => estado.resueltos.includes(c.slug)).length;
-}
-
 export { TOTAL_REQUERIDAS };
 
 // ---- Reductor ----
+
+export type Consecuencia = 'nada' | 'vidaPerdida' | 'salaReiniciada';
+
+/** Qué pasaría si el personaje recibe `cantidad` de daño ahora (para avisar antes de despachar). */
+export function consecuenciaDano(estado: Pick<EstadoJuego, 'energia' | 'vidas'>, cantidad: number): Consecuencia {
+  if (estado.energia - cantidad > 0) return 'nada';
+  return estado.vidas - 1 > 0 ? 'vidaPerdida' : 'salaReiniciada';
+}
+
+/**
+ * Resta vida. Al llegar a 0 se pierde una vida y el traje se restaura a 100.
+ * Al perder la 5.ª vida se pierde TODO el progreso de la sala actual: sus problemas se marcan
+ * como no resueltos y se cambian por otros nuevos (se borran los asignados), y se recuperan las 5 vidas.
+ */
+function aplicarDano(estado: EstadoJuego, cantidad: number): EstadoJuego {
+  const energia = estado.energia - cantidad;
+  if (energia > 0) return { ...estado, energia };
+  const vidas = estado.vidas - 1;
+  if (vidas > 0) return { ...estado, energia: ENERGIA_MAX, vidas, reapariciones: estado.reapariciones + 1 };
+  const sala = SALAS[indiceSala(estado.salaActual)];
+  const slugs = new Set(sala.consolas.map((c) => c.slug));
+  return {
+    ...estado,
+    energia: ENERGIA_MAX,
+    vidas: VIDAS_MAX,
+    reapariciones: estado.reapariciones + 1,
+    salasReiniciadas: estado.salasReiniciadas + 1,
+    resueltos: estado.resueltos.filter((s) => !slugs.has(s)),
+    problemas: Object.fromEntries(Object.entries(estado.problemas).filter(([s]) => !slugs.has(s))),
+    omegaVida: sala.esJefe ? VIDA_OMEGA : estado.omegaVida,
+  };
+}
 
 function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
   switch (accion.tipo) {
@@ -110,16 +161,13 @@ function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
         energia: Math.min(ENERGIA_MAX, estado.energia + ENERGIA_POR_METODO),
         puntos: estado.puntos + (accion.esEscudo ? 250 : 100),
       };
-    case 'dano': {
-      const energia = estado.energia - accion.cantidad;
-      const reaparece = energia <= 0;
-      return {
-        ...estado,
-        energia: reaparece ? ENERGIA_MAX : energia,
-        danosRecibidos: estado.danosRecibidos + 1,
-        reapariciones: estado.reapariciones + (reaparece ? 1 : 0),
-      };
-    }
+    case 'dano':
+      return { ...aplicarDano(estado, accion.cantidad), danosRecibidos: estado.danosRecibidos + 1 };
+    case 'problema':
+      return { ...estado, problemas: { ...estado.problemas, [accion.slug]: accion.problema } };
+    case 'respuestaIncorrecta':
+      // Cada respuesta incorrecta quita 5 puntos de vida (mismas reglas de vidas que los golpes).
+      return { ...aplicarDano(estado, VIDA_POR_RESPUESTA_INCORRECTA), respuestasIncorrectas: estado.respuestasIncorrectas + 1 };
     case 'impactoOmega': {
       if (estado.omegaVida <= 0) return estado;
       const omegaVida = estado.omegaVida - 1;
@@ -141,6 +189,20 @@ function numeroEn(v: unknown, min: number, max: number, porDefecto: number): num
   return Math.max(min, Math.min(max, n));
 }
 
+/** Descarta problemas guardados con forma inválida o de métodos que ya no existen. */
+function problemasValidos(v: unknown): Record<string, ProblemaAsignado> {
+  const salida: Record<string, ProblemaAsignado> = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return salida;
+  for (const [slug, p] of Object.entries(v as Record<string, unknown>)) {
+    if (!SLUGS.has(slug) || !p || typeof p !== 'object') continue;
+    const { entrada, campos } = p as Partial<ProblemaAsignado>;
+    if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada)) continue;
+    if (!Array.isArray(campos) || !campos.every((c) => typeof c === 'string')) continue;
+    salida[slug] = { entrada, campos };
+  }
+  return salida;
+}
+
 /** Lee la partida guardada; descarta datos adulterados o de versiones antiguas. */
 export function cargarPartida(): EstadoJuego | null {
   try {
@@ -157,12 +219,16 @@ export function cargarPartida(): EstadoJuego | null {
       historiasVistas: Array.isArray(d.historiasVistas)
         ? (d.historiasVistas.filter((s) => typeof s === 'string' && IDS_SALA.has(s)) as IdSala[])
         : [],
-      energia: numeroEn(d.energia, 10, ENERGIA_MAX, ENERGIA_MAX),
+      energia: numeroEn(d.energia, 1, ENERGIA_MAX, ENERGIA_MAX),
+      vidas: Math.trunc(numeroEn(d.vidas, 1, VIDAS_MAX, VIDAS_MAX)),
+      salasReiniciadas: Math.trunc(numeroEn(d.salasReiniciadas, 0, 1e6, 0)),
       omegaVida: Math.trunc(numeroEn(d.omegaVida, 0, VIDA_OMEGA, VIDA_OMEGA)),
       puntos: numeroEn(d.puntos, 0, 1e7, 0),
       tiempoMs: numeroEn(d.tiempoMs, 0, 1e10, 0),
       danosRecibidos: numeroEn(d.danosRecibidos, 0, 1e6, 0),
       reapariciones: numeroEn(d.reapariciones, 0, 1e6, 0),
+      respuestasIncorrectas: numeroEn(d.respuestasIncorrectas, 0, 1e6, 0),
+      problemas: problemasValidos(d.problemas),
       victoria: false,
     };
     // No permitir salas bloqueadas con progreso adulterado.

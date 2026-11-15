@@ -33,22 +33,22 @@ export function Inicio({ estado, onContinuar, onNueva, onProfesor, onDocente }: 
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col justify-center gap-10 px-5 py-10">
       <header className="flex flex-col gap-4">
-        <p className="m-0 flex items-center gap-2 font-display text-base text-cian">
+        <p className="m-0 flex items-center gap-2 font-display text-base text-primario">
           <FlaskConical size={20} aria-hidden /> Edición DELUXE
         </p>
         <h1 className="m-0 text-h2 sm:text-h1">Escape del Laboratorio Numérico II</h1>
         <p className="m-0 max-w-2xl text-xl text-tenue">
-          La IA <span className="font-semibold text-omega">OMEGA</span> secuestró el laboratorio. Recorre sus cuatro sectores, esquiva a los centinelas y resuelve
-          cada consola con los métodos del libro para recuperar la instalación.
+          La IA <span className="font-semibold text-omega">OMEGA</span> tomó el laboratorio. Recorre sus seis salas, esquiva a los centinelas y resuelve a
+          mano cada problema con los métodos del libro para recuperar la instalación.
         </p>
       </header>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_18rem]">
-        <form onSubmit={nueva} className="flex flex-col gap-5 rounded-xl border border-linea bg-panel p-5">
+        <form onSubmit={nueva} className="tarjeta flex flex-col gap-5 p-6">
           {hayPartida && (
             <div className="flex flex-col gap-3 border-b border-linea pb-5">
               <p className="m-0 text-tenue">
-                Partida guardada{estado.matricula ? ` de ${estado.matricula}` : ''}: {requeridasResueltas(estado)} de {TOTAL_REQUERIDAS} consolas, en {sala?.nombre}.
+                Partida guardada{estado.matricula ? ` de ${estado.matricula}` : ''}: {requeridasResueltas(estado)} de {TOTAL_REQUERIDAS} problemas, en {sala?.nombre}.
               </p>
               <div>
                 <button type="button" className="btn btn-primario" onClick={onContinuar} autoFocus>
@@ -59,7 +59,7 @@ export function Inicio({ estado, onContinuar, onNueva, onProfesor, onDocente }: 
           )}
           <div className="flex flex-col gap-1.5">
             <label htmlFor={`${id}-mat`} className="text-sm font-semibold">
-              Matrícula <span className="font-normal text-tenue">(opcional)</span>
+              Matrícula
             </label>
             <input
               id={`${id}-mat`}
@@ -72,7 +72,7 @@ export function Inicio({ estado, onContinuar, onNueva, onProfesor, onDocente }: 
               aria-describedby={`${id}-ayuda`}
             />
             <p id={`${id}-ayuda`} className="m-0 text-sm text-tenue">
-              Se usa para firmar tus evidencias en el Modo Comprobación Docente.
+              Firma las fotos de tus procedimientos que revisa tu docente. Si la dejas vacía, se te pedirá al verificar tu primera respuesta.
             </p>
           </div>
           {confirmar && (
@@ -92,12 +92,12 @@ export function Inicio({ estado, onContinuar, onNueva, onProfesor, onDocente }: 
           </div>
         </form>
 
-        <aside className="flex flex-col gap-4">
+        <aside className="tarjeta flex flex-col gap-4 p-5">
           <div className="flex flex-col gap-2 text-sm">
             <h2 className="m-0 text-base">Controles</h2>
             <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-tenue">
               <li><kbd className="kbd">WASD</kbd> o flechas para moverte</li>
-              <li><kbd className="kbd">E</kbd> activar consola, <kbd className="kbd">F</kbd> cruzar puerta</li>
+              <li><kbd className="kbd">E</kbd> abrir módulo, <kbd className="kbd">F</kbd> cruzar puerta</li>
               <li><kbd className="kbd">Espacio</kbd> disparar a OMEGA</li>
               <li><kbd className="kbd">T</kbd> modo profesor, <kbd className="kbd">H</kbd> ayuda, <kbd className="kbd">M</kbd> sonido</li>
             </ul>

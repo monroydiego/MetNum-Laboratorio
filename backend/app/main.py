@@ -27,6 +27,7 @@ async def _error_metodo(_: Request, exc: ErrorMetodo) -> JSONResponse:
 
 app.include_router(routes_calculo.router)
 app.include_router(routes_calculo.catalogo)
+app.include_router(routes_calculo.problemas)
 app.include_router(routes_docente.router)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 

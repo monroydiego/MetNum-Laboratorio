@@ -1,10 +1,11 @@
 // Panel de un método: formulario generado, resolución en el backend y resultados
 // (resultado, pasos KaTeX, matrices, tabla, gráfica, convergencia) + Modo Comprobación.
-import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react';
-import { AlertTriangle, BookOpen, ClipboardCheck, Eraser, PlugZap, RefreshCw, Sigma } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { AlertTriangle, BookOpen, Dices, Eraser, PlugZap, RefreshCw, Sigma } from 'lucide-react';
 import { useCatalogo } from '../catalogo/contexto';
-import { calcular, ErrorApi, mensajeDeError } from '../services/apiClient';
-import type { EvidenciaDTO, MetodoInfoDTO, ResultadoNumericoDTO, SerieDTO } from '../types/numericos';
+import { calcular, ErrorApi, mensajeDeError, obtenerProblema } from '../services/apiClient';
+import type { EvidenciaDTO, MetodoInfoDTO, ResultadoNumericoDTO } from '../types/numericos';
+import type { ProblemaAsignado } from '../juego/estado';
 import {
   camposDesdeEsquema,
   construirPayload,
@@ -13,24 +14,37 @@ import {
   type ValorCampo,
   type ValoresFormulario,
 } from '../utilidades/esquema';
-import { fichaResultadoPNG } from '../utilidades/fichaCanvas';
 import { FormularioMetodo } from './FormularioMetodo';
-import { NombreResultado, ValorCelda } from './Latex';
-import { MatrizVista } from './MatrizVista';
-import { ModalComprobacion } from './ModalComprobacion';
-import { PasosKatex } from './PasosKatex';
-import { PlanoCartesiano, type PlanoHandle } from './PlanoCartesiano';
-import { TablaResultado } from './TablaResultado';
+import { PanelProblema } from './PanelProblema';
+import { Resolucion } from './Resolucion';
 import { ROMANOS } from '../juego/mapa';
 
 interface Props {
   slug: string;
-  /** consola: marca la consola al resolver. profesor: exploración libre. */
-  modo: 'consola' | 'profesor';
+  /**
+   * consola: problema del juego (el jugador lo resuelve a mano y escribe su respuesta).
+   * profesor: exploración libre con datos propios o problemas aleatorios.
+   * consulta: tabla de referencia sin problema.
+   */
+  modo: 'consola' | 'profesor' | 'consulta';
   matricula: string;
   nivel: number;
   onResuelto?: (r: ResultadoNumericoDTO) => void;
   onEvidencia?: (e: EvidenciaDTO, matricula: string) => void;
+  /** Solo modo consola: problema vigente guardado en la partida, si ya se había planteado. */
+  problema?: ProblemaAsignado;
+  /** Solo modo consola: la consola ya se resolvió antes (se muestra su resolución). */
+  yaResuelto?: boolean;
+  /** Solo modo consola: se asignó un problema nuevo (para conservarlo en la partida). */
+  onProblema?: (p: ProblemaAsignado) => void;
+  /** Solo modo consola: respuesta incorrecta (resta vida al personaje). */
+  onIncorrecta?: () => void;
+  /** Solo modo consola: vida actual del traje (se muestra junto a la respuesta). */
+  vida?: number;
+  /** Solo modo consola: vidas restantes del personaje. */
+  vidas?: number;
+  /** Solo modo consola: matrícula escrita en el panel (para guardarla en la partida). */
+  onMatricula?: (m: string) => void;
 }
 
 /** Contenido del panel de método. El contenedor (diálogo o columna) lo pone quien lo usa. */
@@ -61,6 +75,7 @@ export function PanelMetodo(props: Props) {
     );
   }
   // key: reinicia el estado interno al cambiar de método.
+  if (props.modo === 'consola') return <PanelProblema key={metodo.slug} metodo={metodo} {...props} />;
   return <PanelConMetodo key={metodo.slug} metodo={metodo} {...props} />;
 }
 
@@ -84,9 +99,8 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
   const [cargando, setCargando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoNumericoDTO | null>(null);
   const [entrada, setEntrada] = useState<Record<string, unknown>>({});
-  const [comprobando, setComprobando] = useState(false);
-  const planoRef = useRef<PlanoHandle>(null);
-  const convergenciaRef = useRef<PlanoHandle>(null);
+  const autoProblema = modo !== 'consulta';
+  const [generando, setGenerando] = useState(autoProblema);
   const resultadosRef = useRef<HTMLDivElement>(null);
   const tieneEjemplo = Object.keys(metodo.ejemplo ?? {}).length > 0;
 
@@ -99,6 +113,36 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
       return resto;
     });
   }, []);
+
+  /** Pide un problema aleatorio (distinto cada vez) y lo carga en el formulario. */
+  const nuevoProblema = useCallback(
+    async (vigente: () => boolean = () => true) => {
+      setGenerando(true);
+      setErrorGeneral(null);
+      try {
+        const { entrada: problema } = await obtenerProblema(metodo.slug);
+        if (!vigente()) return;
+        setValores(valoresDesdeEjemplo(campos, problema));
+        setErrores({});
+        setResultado(null); // el resultado anterior pertenece al problema anterior
+      } catch (err) {
+        if (vigente()) setErrorGeneral(`No se pudo generar un problema: ${mensajeDeError(err)}`);
+      } finally {
+        if (vigente()) setGenerando(false);
+      }
+    },
+    [campos, metodo.slug],
+  );
+
+  // Al entrar a un método se plantea un problema distinto.
+  useEffect(() => {
+    if (!autoProblema) return;
+    let activo = true;
+    void nuevoProblema(() => activo);
+    return () => {
+      activo = false;
+    };
+  }, [nuevoProblema, autoProblema]);
 
   async function resolver(e: FormEvent) {
     e.preventDefault();
@@ -124,18 +168,6 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
     }
   }
 
-  const seriesConvergencia = useMemo<SerieDTO[]>(
-    () => ((resultado?.errores.length ?? 0) >= 2 && resultado ? [{ nombre: 'Error por iteración', tipo: 'linea', puntos: resultado.errores.map((e, i) => [i + 1, e]) }] : []),
-    [resultado],
-  );
-  const seriesPlano = useMemo(() => resultado?.series ?? [], [resultado]);
-
-  const obtenerCaptura = useCallback(async () => {
-    if (seriesPlano.length && planoRef.current) return planoRef.current.exportarPNG();
-    if (seriesConvergencia.length && convergenciaRef.current) return convergenciaRef.current.exportarPNG();
-    return resultado ? fichaResultadoPNG(resultado) : null;
-  }, [seriesPlano, seriesConvergencia, resultado]);
-
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       <form onSubmit={resolver} className="flex flex-col gap-4 lg:sticky lg:top-0 lg:self-start" noValidate>
@@ -145,9 +177,10 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
             {metodo.capitulo ? `, ${metodo.capitulo}` : ''}, página {metodo.pagina} del libro
           </p>
           {modo === 'profesor' && <p className="m-0 text-sm text-ambar">Modo profesor: este cálculo no marca consolas del juego.</p>}
+          {modo === 'consulta' && <p className="m-0 text-sm text-ambar">Panel de consulta: tabla de referencia, no es un problema.</p>}
         </div>
         {campos.length ? (
-          <FormularioMetodo campos={campos} valores={valores} errores={errores} onCambio={cambiar} deshabilitado={cargando} />
+          <FormularioMetodo campos={campos} valores={valores} errores={errores} onCambio={cambiar} deshabilitado={cargando || generando} />
         ) : (
           <p className="m-0 text-tenue">Este método no necesita datos de entrada.</p>
         )}
@@ -157,19 +190,25 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
           </p>
         )}
         <div className="flex flex-wrap gap-2">
-          <button type="submit" className="btn btn-primario" disabled={cargando}>
+          <button type="submit" className="btn btn-primario" disabled={cargando || generando}>
             <Sigma size={16} aria-hidden /> {cargando ? 'Resolviendo…' : 'Resolver'}
           </button>
+          {autoProblema && (
+            <button type="button" className="btn" disabled={cargando || generando} onClick={() => void nuevoProblema()}>
+              <Dices size={16} aria-hidden /> {generando ? 'Generando…' : 'Problema nuevo'}
+            </button>
+          )}
           {tieneEjemplo && (
-            <button type="button" className="btn" disabled={cargando} onClick={() => {
+            <button type="button" className="btn" disabled={cargando || generando} onClick={() => {
               setValores(valoresDesdeEjemplo(campos, metodo.ejemplo));
+              setResultado(null);
               setErrores({});
               setErrorGeneral(null);
             }}>
               <BookOpen size={16} aria-hidden /> Cargar ejemplo del libro
             </button>
           )}
-          <button type="button" className="btn btn-fantasma" disabled={cargando} onClick={() => {
+          <button type="button" className="btn btn-fantasma" disabled={cargando || generando} onClick={() => {
             setValores(valoresIniciales(campos));
             setErrores({});
             setErrorGeneral(null);
@@ -183,82 +222,15 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
         {!resultado ? (
           <div className="rounded-xl border border-dashed border-linea p-6 text-tenue">
             {tieneEjemplo
-              ? 'Escribe tus datos o carga el ejemplo del libro y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'
-              : 'Escribe tus datos y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'}
+              ? 'Resuelve el problema planteado (o pide uno nuevo, o carga el ejemplo del libro) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'
+              : 'Resuelve el problema planteado (o pide uno nuevo) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'}
           </div>
         ) : (
           <>
-            <VistaResultado resultado={resultado} />
-            <PasosKatex pasos={resultado.pasos} />
-            {resultado.matrices.length > 0 && (
-              <section className="flex flex-col gap-4" aria-label="Matrices">
-                {resultado.matrices.map((m, i) => (
-                  <MatrizVista key={i} matriz={m} primeraFilaEncabezado={metodo.slug === 'tablas-newton-cotes' ? true : undefined} />
-                ))}
-              </section>
-            )}
-            <TablaResultado columnas={resultado.columnas} filas={resultado.filas} />
-            {seriesPlano.length > 0 && <PlanoCartesiano ref={planoRef} series={seriesPlano} titulo="Gráfica" />}
-            {seriesConvergencia.length > 0 && (
-              <PlanoCartesiano
-                ref={convergenciaRef}
-                series={seriesConvergencia}
-                titulo="Convergencia del error"
-                escalaY="log"
-                etiquetaX="iteración"
-                etiquetaY="error"
-                alto={240}
-              />
-            )}
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-linea bg-panel-2/60 p-4">
-              <p className="m-0 flex-1 text-sm text-tenue">
-                ¿Lo resolviste también a mano? Envía la foto de tu procedimiento para que tu docente lo compare con este resultado.
-              </p>
-              <button type="button" className="btn" onClick={() => setComprobando(true)}>
-                <ClipboardCheck size={16} aria-hidden /> Modo Comprobación Docente
-              </button>
-            </div>
-            {comprobando && (
-              <ModalComprobacion
-                resultado={resultado}
-                entrada={entrada}
-                matriculaInicial={matricula}
-                nivelInicial={nivel}
-                obtenerCaptura={obtenerCaptura}
-                onCerrar={() => setComprobando(false)}
-                onEnviada={onEvidencia}
-              />
-            )}
+            <Resolucion slug={metodo.slug} resultado={resultado} entrada={entrada} matricula={matricula} nivel={nivel} onEvidencia={onEvidencia} />
           </>
         )}
       </div>
     </div>
-  );
-}
-
-function VistaResultado({ resultado }: { resultado: ResultadoNumericoDTO }) {
-  const entradas = Object.entries(resultado.resultado);
-  return (
-    <section className="flex flex-col gap-3" aria-label="Resultado">
-      {resultado.advertencias.map((a, i) => (
-        <p key={i} className="m-0 flex items-start gap-2 rounded-lg border border-ambar/50 bg-ambar/10 px-3 py-2 text-sm text-ambar">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden /> {a}
-        </p>
-      ))}
-      {entradas.length > 0 && (
-        <dl className="m-0 grid gap-2 sm:grid-cols-2">
-          {entradas.map(([k, v]) => (
-            <div key={k} className="flex flex-col gap-1 rounded-lg border border-cian-2/60 bg-cian/5 px-4 py-3">
-              <dt className="text-sm text-tenue">
-                <NombreResultado clave={k} />
-              </dt>
-              <dd className="m-0 text-xl break-all text-cian">
-                <ValorCelda valor={v} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-    </section>
   );
 }

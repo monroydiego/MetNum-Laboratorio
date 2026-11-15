@@ -27,6 +27,7 @@ _FUNCIONES: dict[str, Any] = {
     "sec": sp.sec,
     "csc": sp.csc,
     "cot": sp.cot,
+    "ctg": sp.cot,  # notación de las Actividades Fundamentales (context/OR)
     "ln": sp.log,
     "Ln": sp.log,
     "log": sp.log,
