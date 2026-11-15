@@ -1,0 +1,19 @@
+# Dependencias y entornos
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build
+frontend/dist/
+
+# Datos y evidencias locales
+*.db
+backend/data/
+backend/uploads/
+
+# Editor / SO
+.DS_Store
+.vscode/
+.idea/

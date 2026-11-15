@@ -1,0 +1,185 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+/* Tokens de diseño: terminal de laboratorio oscura, azul petróleo.
+   Cian/menta = propio y seguro. Rojo/rosa = SOLO lo hostil. */
+@theme {
+  --color-fondo: #070e15;
+  --color-panel: #101b26;
+  --color-panel-2: #121f2b;
+  --color-linea: #263645;
+  --color-tinta: #eaf3fb;
+  --color-tenue: #8fa1b2;
+  --color-cian: #48e7d5;
+  --color-cian-2: #178f8f;
+  --color-ambar: #ffcf76;
+  --color-menta: #83eda3;
+  --color-hostil: #ff7781;
+  --color-omega: #ff396d;
+  --color-escudo: #bf76fb;
+
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Escala tipográfica 14/16/20/25/31/39 */
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-xl: 1.25rem;
+  --text-h3: 1.5625rem;
+  --text-h3--line-height: 1.25;
+  --text-h2: 1.9375rem;
+  --text-h2--line-height: 1.2;
+  --text-h1: 2.4375rem;
+  --text-h1--line-height: 1.1;
+
+  --animate-latido: latido 1.6s ease-in-out infinite;
+  --animate-flujo: flujo 1.4s linear infinite;
+  --animate-aparecer: aparecer 0.2s ease-out;
+
+  @keyframes latido {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.04); }
+  }
+  @keyframes flujo {
+    to { stroke-dashoffset: -24; }
+  }
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* Variables espejo en :root para quien no pasa por Tailwind (canvas lee tokens.ts). */
+:root {
+  color-scheme: dark;
+  --fondo: #070e15;
+  --cian: #48e7d5;
+  --hostil: #ff7781;
+}
+
+@layer base {
+  html {
+    background: var(--color-fondo);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    line-height: 1.5;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ambar);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-cian) 35%, transparent);
+  }
+  dialog::backdrop {
+    background: rgb(3 7 11 / 0.78);
+  }
+  input, select, textarea, button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* Botones: uno primario por vista, el resto secundario o fantasma. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-linea);
+    background: var(--color-panel-2);
+    color: var(--color-tinta);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--color-cian-2);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primario {
+    background: var(--color-cian);
+    border-color: var(--color-cian);
+    color: #04201d;
+  }
+  .btn-primario:hover:not(:disabled) {
+    background: #7af0e2;
+    border-color: #7af0e2;
+  }
+  .btn-fantasma {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-tenue);
+  }
+  .btn-fantasma:hover:not(:disabled) {
+    color: var(--color-tinta);
+    border-color: var(--color-linea);
+  }
+  .campo {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-linea);
+    background: #0b151f;
+    color: var(--color-tinta);
+  }
+  .campo:focus-visible {
+    outline: 2px solid var(--color-cian);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  .campo[aria-invalid="true"] {
+    border-color: var(--color-hostil);
+  }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6rem;
+    padding: 0 0.35rem;
+    border-radius: 0.3rem;
+    border: 1px solid var(--color-linea);
+    border-bottom-width: 2px;
+    background: var(--color-panel-2);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+  }
+  .numero {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* KaTeX hereda el color del texto y no desborda. */
+.katex { color: inherit; font-size: 1.08em; }
+.katex-display { margin: 0.4rem 0; overflow-x: auto; overflow-y: hidden; padding: 0.2rem 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

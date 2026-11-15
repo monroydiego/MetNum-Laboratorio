@@ -1,0 +1,16 @@
+{
+  "name": "juego-metodos-numericos",
+  "version": "1.0.0",
+  "scripts": {
+    "dev:front": "npm --prefix frontend run dev",
+    "dev:back": "cd backend && ./.venv/bin/uvicorn app.main:app --reload --port 8000",
+    "dev": "concurrently -n FRONT,BACK -c cyan,yellow \"npm run dev:front\" \"npm run dev:back\"",
+    "test:back": "./backend/.venv/bin/pytest backend/tests/ -q",
+    "build:front": "npm --prefix frontend run build"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  },
+  "private": true
+}
