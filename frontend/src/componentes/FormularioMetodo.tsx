@@ -1,7 +1,15 @@
 // Formulario generado a partir de esquema_entrada (JSON Schema de Pydantic).
 import { useId, type ClipboardEvent } from 'react';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Minus, Plus, Trash2 } from 'lucide-react';
 import type { CampoFormulario, ValorCampo, ValoresFormulario } from '../utilidades/esquema';
+
+/** Campo deshabilitado (problema de solo lectura o cargando): se lee como dato impreso, no como gris. */
+const CAMPO_LECTURA = 'disabled:cursor-not-allowed disabled:text-tinta disabled:opacity-100';
+
+/** Hoja de laboratorio: renglones de lápiz detrás de listas y matrices. */
+const HOJA = {
+  backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0 2.45rem, var(--color-linea) 2.45rem calc(2.45rem + 1px))',
+} as const;
 
 interface Props {
   campos: CampoFormulario[];
@@ -45,7 +53,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
         <input
           {...comunes}
           type="checkbox"
-          className="size-5 accent-primario"
+          className="size-5 cursor-pointer accent-tinta"
           checked={Boolean(valor)}
           onChange={(e) => onCambio(e.target.checked)}
         />
@@ -53,7 +61,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
       break;
     case 'opciones':
       control = (
-        <select {...comunes} className="campo" value={String(valor ?? '')} onChange={(e) => onCambio(e.target.value)}>
+        <select {...comunes} className={`campo ${CAMPO_LECTURA}`} value={String(valor ?? '')} onChange={(e) => onCambio(e.target.value)}>
           {!campo.requerido && <option value="">Sin elegir</option>}
           {campo.opciones.map((o) => (
             <option key={String(o)} value={String(o)}>
@@ -72,7 +80,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
           step={1}
           min={campo.minimo}
           max={campo.maximo}
-          className="campo"
+          className={`campo numero ${CAMPO_LECTURA}`}
           value={String(valor ?? '')}
           onChange={(e) => onCambio(e.target.value)}
         />
@@ -90,7 +98,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
           {...comunes}
           rows={4}
           spellCheck={false}
-          className="campo font-mono text-sm"
+          className={`campo font-mono text-sm ${CAMPO_LECTURA}`}
           value={String(valor ?? '')}
           onChange={(e) => onCambio(e.target.value)}
         />
@@ -104,7 +112,7 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
           inputMode={campo.tipo === 'numero' ? 'decimal' : undefined}
           autoComplete="off"
           spellCheck={false}
-          className="campo"
+          className={`campo ${campo.tipo === 'numero' ? 'numero' : ''} ${CAMPO_LECTURA}`}
           value={String(valor ?? '')}
           onChange={(e) => onCambio(e.target.value)}
         />
@@ -114,16 +122,22 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
   const esGrupo = campo.tipo === 'lista' || campo.tipo === 'matriz';
   const Envoltura = esGrupo ? 'fieldset' : 'div';
   return (
-    <Envoltura className={`m-0 flex min-w-0 flex-col gap-1.5 border-0 p-0 ${ancho ? 'sm:col-span-2' : ''} ${campo.tipo === 'booleano' ? 'flex-row items-center gap-3' : ''}`}>
+    <Envoltura
+      className={`m-0 flex min-w-0 flex-col gap-1.5 ${
+        esGrupo
+          ? 'rounded-lg border-[length:var(--trazo-fino)] border-tinta bg-panel px-3 pt-1 pb-3 shadow-tinta-sm'
+          : 'border-0 p-0'
+      } ${ancho ? 'sm:col-span-2' : ''} ${campo.tipo === 'booleano' ? 'flex-row-reverse items-center justify-end gap-3' : ''} ${error ? 'border-hostil' : ''}`}
+    >
       {esGrupo ? (
-        <legend className="mb-1.5 p-0 text-sm font-semibold">
+        <legend className="-ml-1 max-w-full rounded-md border-[length:var(--trazo-fino)] border-tinta bg-papel px-2 py-0.5 font-display text-sm text-tinta">
           {campo.etiqueta}
-          {!campo.requerido && !/opcional/i.test(campo.etiqueta) && <span className="font-normal text-tenue"> (opcional)</span>}
+          {!campo.requerido && !/opcional/i.test(campo.etiqueta) && <span className="font-sans text-tenue"> (opcional)</span>}
         </legend>
       ) : (
-        <label htmlFor={id} className="text-sm font-semibold">
+        <label htmlFor={id} className="font-display text-sm text-tinta">
           {campo.etiqueta}
-          {!campo.requerido && !/opcional/i.test(campo.etiqueta) && <span className="font-normal text-tenue"> (opcional)</span>}
+          {!campo.requerido && !/opcional/i.test(campo.etiqueta) && <span className="font-sans text-tenue"> (opcional)</span>}
         </label>
       )}
       {control}
@@ -133,7 +147,8 @@ function Campo({ campo, valor, error, onCambio, deshabilitado }: PropsCampo) {
         </p>
       )}
       {error && (
-        <p id={idError} className="m-0 text-sm text-hostil">
+        <p id={idError} className="m-0 flex items-start gap-1.5 text-sm font-semibold text-hostil">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
           {error}
         </p>
       )}
@@ -163,10 +178,10 @@ function EditorLista({ id, valores, onCambio, etiqueta, disabled, ...aria }: Pro
   }
   return (
     <div className="flex flex-col gap-2">
-      <ol className="m-0 flex list-none flex-wrap gap-2 p-0">
+      <ol className="m-0 flex list-none flex-wrap gap-x-3 gap-y-2 rounded-md bg-panel-2/60 p-2" style={HOJA}>
         {lista.map((v, i) => (
           <li key={i} className="flex items-center gap-1">
-            <span className="numero w-6 text-right text-sm text-tenue" aria-hidden>
+            <span className="numero grid min-w-6 place-items-center rounded-full border-[length:var(--trazo-fino)] border-tinta bg-papel px-1 text-xs text-tinta" aria-hidden>
               {i}
             </span>
             <input
@@ -177,14 +192,14 @@ function EditorLista({ id, valores, onCambio, etiqueta, disabled, ...aria }: Pro
               spellCheck={false}
               disabled={disabled}
               aria-label={`${etiqueta}, valor ${i}`}
-              className="campo numero w-28"
+              className={`campo numero w-28 ${CAMPO_LECTURA}`}
               value={v}
               onChange={(e) => onCambio(lista.map((x, k) => (k === i ? e.target.value : x)))}
               onPaste={(e) => pegar(i, e)}
             />
             <button
               type="button"
-              className="btn btn-fantasma size-9 min-h-0 px-0"
+              className="editor-control btn btn-fantasma size-9 min-h-0 px-0"
               disabled={disabled || lista.length <= 1}
               onClick={() => onCambio(lista.filter((_, k) => k !== i))}
               aria-label={`Quitar valor ${i}`}
@@ -194,11 +209,11 @@ function EditorLista({ id, valores, onCambio, etiqueta, disabled, ...aria }: Pro
           </li>
         ))}
       </ol>
-      <div>
+      <div className="editor-control flex flex-wrap items-center gap-x-3 gap-y-1">
         <button type="button" className="btn" disabled={disabled} onClick={() => onCambio([...lista, ''])}>
           <Plus size={16} aria-hidden /> Agregar valor
         </button>
-        <span className="ml-3 text-sm text-tenue max-sm:hidden">También puedes pegar valores separados por coma.</span>
+        <span className="text-sm text-tenue max-sm:hidden">También puedes pegar valores separados por coma.</span>
       </div>
     </div>
   );
@@ -213,53 +228,58 @@ function EditorMatriz({ id, valores, onCambio, etiqueta, disabled, ...aria }: Pr
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="flex items-center gap-1">
+      <div className="editor-control flex flex-wrap items-center gap-2 text-sm">
+        <span className="flex items-center gap-0.5 rounded-full border-[length:var(--trazo-fino)] border-tinta bg-papel pl-2.5">
           Filas
-          <button type="button" className="btn btn-fantasma size-8 min-h-0 px-0" disabled={disabled || m.length <= 1} onClick={() => onCambio(m.slice(0, -1))} aria-label="Quitar fila">
+          <button type="button" className="btn btn-fantasma size-8 min-h-0 rounded-full px-0" disabled={disabled || m.length <= 1} onClick={() => onCambio(m.slice(0, -1))} aria-label="Quitar fila">
             <Minus size={15} aria-hidden />
           </button>
           <span className="numero w-5 text-center">{m.length}</span>
-          <button type="button" className="btn btn-fantasma size-8 min-h-0 px-0" disabled={disabled} onClick={() => onCambio([...m, Array(cols).fill('')])} aria-label="Agregar fila">
+          <button type="button" className="btn btn-fantasma size-8 min-h-0 rounded-full px-0" disabled={disabled} onClick={() => onCambio([...m, Array(cols).fill('')])} aria-label="Agregar fila">
             <Plus size={15} aria-hidden />
           </button>
         </span>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-0.5 rounded-full border-[length:var(--trazo-fino)] border-tinta bg-papel pl-2.5">
           Columnas
-          <button type="button" className="btn btn-fantasma size-8 min-h-0 px-0" disabled={disabled || cols <= 1} onClick={() => onCambio(m.map((f) => f.slice(0, -1)))} aria-label="Quitar columna">
+          <button type="button" className="btn btn-fantasma size-8 min-h-0 rounded-full px-0" disabled={disabled || cols <= 1} onClick={() => onCambio(m.map((f) => f.slice(0, -1)))} aria-label="Quitar columna">
             <Minus size={15} aria-hidden />
           </button>
           <span className="numero w-5 text-center">{cols}</span>
-          <button type="button" className="btn btn-fantasma size-8 min-h-0 px-0" disabled={disabled} onClick={() => onCambio(m.map((f) => [...f, '']))} aria-label="Agregar columna">
+          <button type="button" className="btn btn-fantasma size-8 min-h-0 rounded-full px-0" disabled={disabled} onClick={() => onCambio(m.map((f) => [...f, '']))} aria-label="Agregar columna">
             <Plus size={15} aria-hidden />
           </button>
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="border-collapse border-x-2 border-tenue/60">
-          <tbody>
-            {m.map((f, i) => (
-              <tr key={i}>
-                {f.map((v, j) => (
-                  <td key={j} className="p-1">
-                    <input
-                      id={i === 0 && j === 0 ? id : undefined}
-                      {...aria}
-                      type="text"
-                      autoComplete="off"
-                      spellCheck={false}
-                      disabled={disabled}
-                      aria-label={`${etiqueta}, fila ${i + 1}, columna ${j + 1}`}
-                      className="campo numero w-20 text-right"
-                      value={v}
-                      onChange={(e) => fijar(i, j, e.target.value)}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="overflow-x-auto pb-1">
+        {/* Matriz entre corchetes dibujados a tinta, sobre hoja de laboratorio */}
+        <div className="relative inline-block bg-panel-2/60 px-2 py-1" style={HOJA}>
+          <span className="pointer-events-none absolute inset-y-0 left-0 w-2.5 rounded-l-sm border-y-[length:var(--trazo-medio)] border-l-[length:var(--trazo-grueso)] border-tinta" aria-hidden />
+          <span className="pointer-events-none absolute inset-y-0 right-0 w-2.5 rounded-r-sm border-y-[length:var(--trazo-medio)] border-r-[length:var(--trazo-grueso)] border-tinta" aria-hidden />
+          <table className="border-collapse">
+            <tbody>
+              {m.map((f, i) => (
+                <tr key={i}>
+                  {f.map((v, j) => (
+                    <td key={j} className="p-1">
+                      <input
+                        id={i === 0 && j === 0 ? id : undefined}
+                        {...aria}
+                        type="text"
+                        autoComplete="off"
+                        spellCheck={false}
+                        disabled={disabled}
+                        aria-label={`${etiqueta}, fila ${i + 1}, columna ${j + 1}`}
+                        className={`campo numero w-16 text-right sm:w-20 ${CAMPO_LECTURA}`}
+                        value={v}
+                        onChange={(e) => fijar(i, j, e.target.value)}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

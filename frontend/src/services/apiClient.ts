@@ -1,8 +1,11 @@
 import type {
+  DocenteDTO,
   EvidenciaDTO,
   EvidenciaFormCampos,
   MetodoInfoDTO,
   ProblemaDTO,
+  RecordDTO,
+  ResumenMatriculaDTO,
   ResultadoNumericoDTO,
   RevisionDTO,
   VerificacionDTO,
@@ -164,6 +167,45 @@ export function listarEvidencias(limite = 50, matricula?: string): Promise<Evide
   const params = new URLSearchParams({ limite: String(limite) });
   if (matricula?.trim()) params.set('matricula', matricula.trim());
   return solicitar<EvidenciaDTO[]>(`${BASE}/evidencias?${params.toString()}`);
+}
+
+export function registrarRecord(d: { matricula: string; modo: string; tiempo_ms: number; puntos: number }): Promise<RecordDTO> {
+  return solicitar<RecordDTO>(`${BASE}/records`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(d),
+  });
+}
+
+export function listarMatriculas(): Promise<ResumenMatriculaDTO[]> {
+  return solicitar<ResumenMatriculaDTO[]>(`${BASE}/docente/matriculas`);
+}
+
+// ---- Acceso del docente (sesión por cookie HttpOnly) ----
+
+export function iniciarSesionDocente(correo: string, clave: string): Promise<DocenteDTO> {
+  return solicitar<DocenteDTO>(`${BASE}/docente/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ correo, clave }),
+  });
+}
+
+/** Devuelve el docente con sesión vigente o null (sin sesión / sin conexión). */
+export async function sesionDocente(): Promise<DocenteDTO | null> {
+  try {
+    return await solicitar<DocenteDTO>(`${BASE}/docente/sesion`);
+  } catch {
+    return null;
+  }
+}
+
+export async function cerrarSesionDocente(): Promise<void> {
+  try {
+    await fetch(`${BASE}/docente/logout`, { method: 'POST' });
+  } catch {
+    // sin conexión: la cookie caduca sola
+  }
 }
 
 export function mensajeDeError(e: unknown): string {

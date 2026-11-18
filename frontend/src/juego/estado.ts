@@ -20,9 +20,25 @@ export interface ProblemaAsignado {
 
 export const VIDA_POR_RESPUESTA_INCORRECTA = 5;
 
+/** Modos de juego del menú principal. */
+export type ModoJuego = 'campana' | 'contrarreloj' | 'practica';
+export const MODOS: ModoJuego[] = ['campana', 'contrarreloj', 'practica'];
+/** Contrarreloj: tiempo límite de CADA terminal (corre desde que se pulsa E, aunque se salga de ella). */
+export const LIMITE_TERMINAL_MS = 30 * 60 * 1000;
+/** Contrarreloj: vida que se pierde cuando vence el tiempo de una terminal sin resolver. */
+export const VIDA_POR_TERMINAL_VENCIDA = 35;
+
+/** Milisegundos que le quedan a una terminal en marcha (null si su contador no ha iniciado). */
+export function restanteTerminal(estado: Pick<EstadoJuego, 'terminales'>, slug: string, ahora: number): number | null {
+  const inicio = estado.terminales[slug];
+  return inicio === undefined ? null : Math.max(0, LIMITE_TERMINAL_MS - (ahora - inicio));
+}
+
 export interface EstadoJuego {
   version: 3;
   enCurso: boolean;
+  /** Modo de juego de la partida (campaña, contrarreloj o práctica). */
+  modo: ModoJuego;
   matricula: string;
   salaActual: IdSala;
   /** Slugs resueltos en modo juego (consolas y escudos). */
@@ -40,13 +56,15 @@ export interface EstadoJuego {
   danosRecibidos: number;
   reapariciones: number;
   respuestasIncorrectas: number;
+  /** Contrarreloj: instante (ms epoch) en que se inició el contador de cada terminal sin resolver. No se guarda en disco. */
+  terminales: Record<string, number>;
   /** Problema vigente de cada consola (slug -> problema). */
   problemas: Record<string, ProblemaAsignado>;
   victoria: boolean;
 }
 
 export type Accion =
-  | { tipo: 'nuevaPartida'; matricula: string }
+  | { tipo: 'nuevaPartida'; matricula: string; modo?: ModoJuego }
   | { tipo: 'matricula'; valor: string }
   | { tipo: 'entrarSala'; sala: IdSala }
   | { tipo: 'historiaVista'; sala: IdSala }
@@ -54,6 +72,8 @@ export type Accion =
   | { tipo: 'dano'; cantidad: number }
   | { tipo: 'problema'; slug: string; problema: ProblemaAsignado }
   | { tipo: 'respuestaIncorrecta' }
+  | { tipo: 'iniciarTerminal'; slug: string; ahora: number }
+  | { tipo: 'terminalVencida'; slug: string }
   | { tipo: 'impactoOmega' }
   | { tipo: 'tiempo'; ms: number };
 
@@ -61,6 +81,7 @@ export function estadoInicial(matricula = ''): EstadoJuego {
   return {
     version: 3,
     enCurso: false,
+    modo: 'campana',
     matricula,
     salaActual: SALAS[0].id,
     resueltos: [],
@@ -74,6 +95,7 @@ export function estadoInicial(matricula = ''): EstadoJuego {
     danosRecibidos: 0,
     reapariciones: 0,
     respuestasIncorrectas: 0,
+    terminales: {},
     problemas: {},
     victoria: false,
   };
@@ -90,8 +112,9 @@ export function escudosCaidos(estado: Pick<EstadoJuego, 'resueltos'>, sala: Sala
   return consolasRequeridas(sala).every((c) => estado.resueltos.includes(c.slug));
 }
 
-/** Una sala está disponible si todas las anteriores están completas. */
-export function salaDesbloqueada(estado: Pick<EstadoJuego, 'resueltos' | 'omegaVida'>, id: IdSala): boolean {
+/** Una sala está disponible si todas las anteriores están completas (en práctica, todas lo están). */
+export function salaDesbloqueada(estado: Pick<EstadoJuego, 'resueltos' | 'omegaVida' | 'modo'>, id: IdSala): boolean {
+  if (estado.modo === 'practica') return true;
   const idx = indiceSala(id);
   return SALAS.slice(0, idx).every((s) => salaCompleta(estado, s));
 }
@@ -123,6 +146,7 @@ export function consecuenciaDano(estado: Pick<EstadoJuego, 'energia' | 'vidas'>,
  * como no resueltos y se cambian por otros nuevos (se borran los asignados), y se recuperan las 5 vidas.
  */
 function aplicarDano(estado: EstadoJuego, cantidad: number): EstadoJuego {
+  if (estado.modo === 'practica') return estado; // práctica: sin penalización
   const energia = estado.energia - cantidad;
   if (energia > 0) return { ...estado, energia };
   const vidas = estado.vidas - 1;
@@ -137,6 +161,7 @@ function aplicarDano(estado: EstadoJuego, cantidad: number): EstadoJuego {
     salasReiniciadas: estado.salasReiniciadas + 1,
     resueltos: estado.resueltos.filter((s) => !slugs.has(s)),
     problemas: Object.fromEntries(Object.entries(estado.problemas).filter(([s]) => !slugs.has(s))),
+    terminales: Object.fromEntries(Object.entries(estado.terminales).filter(([s]) => !slugs.has(s))),
     omegaVida: sala.esJefe ? VIDA_OMEGA : estado.omegaVida,
   };
 }
@@ -144,7 +169,7 @@ function aplicarDano(estado: EstadoJuego, cantidad: number): EstadoJuego {
 function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
   switch (accion.tipo) {
     case 'nuevaPartida':
-      return { ...estadoInicial(accion.matricula.trim().slice(0, 20)), enCurso: true };
+      return { ...estadoInicial(accion.matricula.trim().slice(0, 20)), modo: accion.modo ?? 'campana', enCurso: true };
     case 'matricula':
       return { ...estado, matricula: accion.valor.slice(0, 20) };
     case 'entrarSala':
@@ -157,6 +182,7 @@ function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
       if (estado.resueltos.includes(accion.slug)) return estado;
       return {
         ...estado,
+        terminales: Object.fromEntries(Object.entries(estado.terminales).filter(([s]) => s !== accion.slug)),
         resueltos: [...estado.resueltos, accion.slug],
         energia: Math.min(ENERGIA_MAX, estado.energia + ENERGIA_POR_METODO),
         puntos: estado.puntos + (accion.esEscudo ? 250 : 100),
@@ -168,6 +194,15 @@ function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
     case 'respuestaIncorrecta':
       // Cada respuesta incorrecta quita 5 puntos de vida (mismas reglas de vidas que los golpes).
       return { ...aplicarDano(estado, VIDA_POR_RESPUESTA_INCORRECTA), respuestasIncorrectas: estado.respuestasIncorrectas + 1 };
+    case 'iniciarTerminal':
+      // El contador arranca al pulsar E y NO se reinicia al volver a abrirla.
+      if (estado.modo !== 'contrarreloj' || estado.resueltos.includes(accion.slug) || accion.slug in estado.terminales) return estado;
+      return { ...estado, terminales: { ...estado.terminales, [accion.slug]: accion.ahora } };
+    case 'terminalVencida': {
+      // Se restan 35 de vida y el contador de la terminal se restablece (vuelve a iniciar con la siguiente E).
+      const sinContador = { ...estado, terminales: Object.fromEntries(Object.entries(estado.terminales).filter(([s]) => s !== accion.slug)) };
+      return aplicarDano(sinContador, VIDA_POR_TERMINAL_VENCIDA);
+    }
     case 'impactoOmega': {
       if (estado.omegaVida <= 0) return estado;
       const omegaVida = estado.omegaVida - 1;
@@ -215,6 +250,7 @@ export function cargarPartida(): EstadoJuego | null {
     const estado: EstadoJuego = {
       ...base,
       enCurso: Boolean(d.enCurso),
+      modo: MODOS.includes(d.modo as ModoJuego) ? (d.modo as ModoJuego) : 'campana',
       resueltos: [...new Set(resueltos)],
       historiasVistas: Array.isArray(d.historiasVistas)
         ? (d.historiasVistas.filter((s) => typeof s === 'string' && IDS_SALA.has(s)) as IdSala[])

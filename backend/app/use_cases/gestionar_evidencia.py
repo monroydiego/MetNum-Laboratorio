@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from app.domain.entities import EvidenciaPartida
 from app.domain.funciones import ErrorMetodo
-from app.domain.repositories import EvidenciaGuardada, IEvidenciaRepo, IFileStorage
+from app.domain.repositories import EvidenciaGuardada, IEvidenciaRepo, IFileStorage, ResumenMatricula
 
 TIPOS_IMAGEN = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
 TAMANO_MAXIMO = 8 * 1024 * 1024  # 8 MB por imagen
@@ -120,3 +120,6 @@ class GestionarEvidencia:
 
     def listar(self, limite: int = 50, matricula: str | None = None) -> list[EvidenciaGuardada]:
         return self._repo.ultimas(max(1, min(limite, 200)), matricula or None)
+
+    def resumen_matriculas(self) -> list[ResumenMatricula]:
+        return self._repo.resumen_por_matricula()

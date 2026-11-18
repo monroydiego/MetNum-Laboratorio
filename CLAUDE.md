@@ -13,6 +13,16 @@ Vienen de `src/codigo_fuente/context/INSTRUCCIONES.md` y aplican a cualquier mé
 3. **Variables del libro:** usa solo variables que aparezcan o se mencionen en el libro. Una variable inventada hace que la respuesta no sea aceptada.
 4. **Nombres de métodos del libro:** no cambies ni inventes nombres de métodos o procedimientos.
 
+## Fase Actual: Rediseño Visual (UI-Only)
+
+> Sección temporal. Se elimina al cerrar la fase.
+
+- **Skill activa por defecto:** `ui-only-guard`. Aplícala antes de CADA edición en `frontend/` y ejecuta su verificación al terminar.
+- **Prohibido tocar:** `backend/`, `frontend/src/services/`, `frontend/src/types/`, `frontend/src/catalogo/`, `frontend/src/juego/estado.ts`, `frontend/src/juego/mapa.ts`, `frontend/src/juego/motor/logica.ts`. Nada de lógica de negocio, cálculos, estado del juego ni contratos.
+- **Área permitida:** `frontend/src/tokens.ts`, `frontend/src/index.css`, `frontend/index.html`, `frontend/src/pantallas/`, `frontend/src/componentes/`, `frontend/src/juego/JuegoCanvas.tsx`, `frontend/src/juego/motor/dibujo.ts`.
+- **Delegación:** las tareas de interfaz y Canvas van al agente `canvas-ui` (`.claude/agents/canvas-ui.md`).
+- **Dirección artística «Cinta de Plata»:** corto animado *rubber hose* en blanco y negro de 1930 (tinta sobre plata, grano, rayones, sombras duras, guantes blancos, movimiento elástico). OMEGA es lo único a todo color (rojo); cada sala recuperada se colorea a mano con su tinte (`tintes` en `tokens.ts`); dorado = foco de atención. `App.tsx` se permite solo para la cabecera visual. Todo valor visual sale de los tokens de `tokens.ts` / `index.css`; durante esta fase sustituye a la descripción de «Diseño visual» de más abajo.
+
 ## Stack Técnico
 
 - **Frontend (`frontend/`):** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React, KaTeX, HTML5 Canvas.

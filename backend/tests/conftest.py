@@ -27,6 +27,7 @@ def cliente_bd(tmp_path):
     from app.infrastructure.database import Base
     from app.infrastructure.local_storage import LocalFileStorage
     from app.infrastructure.sqlite_repo import SQLiteEvidenciaRepo
+    from app.presentation.routes_auth import exigir_docente
     from app.presentation.routes_docente import obtener_caso_uso
     from app.use_cases.gestionar_evidencia import GestionarEvidencia
 
@@ -34,6 +35,7 @@ def cliente_bd(tmp_path):
     Base.metadata.create_all(motor)
     sesiones = sessionmaker(bind=motor)
     almacen = LocalFileStorage(raiz=tmp_path)
+    app.dependency_overrides[exigir_docente] = lambda: None
     app.dependency_overrides[obtener_caso_uso] = lambda: GestionarEvidencia(SQLiteEvidenciaRepo(sesiones), almacen)
     yield TestClient(app), tmp_path
     app.dependency_overrides.clear()

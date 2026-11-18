@@ -32,6 +32,39 @@ class EvidenciaModel(Base):
     fecha_registro = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class RecordModel(Base):
+    """Misión completada (victoria sobre OMEGA). El récord de una matrícula es su menor `tiempo_ms`."""
+
+    __tablename__ = "records_tiempo"
+
+    id = Column(Integer, primary_key=True, index=True)
+    matricula = Column(String(20), index=True, nullable=False)
+    modo = Column(String(20), nullable=False)  # campana | contrarreloj
+    tiempo_ms = Column(Integer, nullable=False)
+    puntos = Column(Integer, nullable=False)
+    fecha_registro = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class DocenteModel(Base):
+    """Cuenta de docente (Modo profesor y Panel Docente). La clave se guarda solo como hash scrypt."""
+
+    __tablename__ = "docentes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    correo = Column(String(120), unique=True, index=True, nullable=False)
+    clave_hash = Column(String(255), nullable=False)
+
+
+class SesionModel(Base):
+    """Sesión activa del docente: se guarda el hash SHA-256 del token, nunca el token."""
+
+    __tablename__ = "sesiones_docente"
+
+    token_hash = Column(String(64), primary_key=True)
+    docente_id = Column(Integer, nullable=False, index=True)
+    expira = Column(DateTime, nullable=False)
+
+
 def preparar_bd() -> None:
     """Crea las tablas. Migra el esquema previo (columna error_porcentual) si la tabla está vacía."""
     columnas = (

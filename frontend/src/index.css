@@ -1,69 +1,192 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-/* Tokens de diseño: laboratorio claro (porcelana, vidrio de matraz y reactivos).
-   Verde matraz = propio y seguro. Ámbar = atención. Coral/vino = SOLO lo hostil. */
+/* ==========================================================================
+   Dirección artística «Cinta de Plata».
+   El laboratorio es un corto animado «rubber hose» en blanco y negro de 1930:
+   tinta china sobre plata, grano, rayones y parpadeo de proyector, sombras
+   duras, guantes blancos y movimiento elástico.
+   · OMEGA es lo ÚNICO a todo color: su rojo mancha la película.
+   · Cada sala recuperada se colorea a mano con su tinte (--color-tinte-*).
+   · Dorado = foco de atención (interacción, selección, anillo de foco).
+   Espejo en src/tokens.ts (mismos nombres, mismos valores).
+   ========================================================================== */
 @theme {
-  --color-fondo: #f1efe9;
-  --color-panel: #ffffff;
-  --color-panel-2: #f7f6f2;
-  --color-linea: #dedad1;
-  --color-tinta: #22302d;
-  --color-tenue: #5f6b67;
-  --color-primario: #2d7a67;
-  --color-primario-2: #8fc3b4;
-  --color-ambar: #b9741a;
-  --color-menta: #2f8f55;
-  --color-hostil: #c4483a;
-  --color-omega: #a8325a;
-  --color-escudo: #6f55b8;
-  --color-campo: #fbfaf7;
+  /* Plata */
+  --color-fondo: #e6e5df;
+  --color-panel: #fbfbf8;
+  --color-panel-2: #efeee9;
+  --color-campo: #ffffff;
+  --color-papel: #ffffff;
+  --color-linea: #b9b8b1;
+  --color-gris: #8d8c85;
+  /* Tinta */
+  --color-tinta: #131313;
+  --color-tenue: #56554e;
+  /* Semánticos */
+  --color-primario: #131313;
+  --color-primario-2: #cfcec7;
+  --color-ambar: #6b5000;
+  --color-ambar-2: #f2c230;
+  --color-menta: #1f6b3e;
+  --color-menta-2: #dfece2;
+  --color-hostil: #c8102e;
+  --color-omega: #8e0b20;
+  --color-escudo: #4b3b8f;
+  --color-azul: #2a4f86;
+  /* Tintes a mano por sala (decorativos, nunca para texto pequeño) */
+  --color-tinte-sensores: #c98a1c;
+  --color-tinte-acceso: #3f6fb8;
+  --color-tinte-energia: #3f8a4e;
+  --color-tinte-anomalias: #7c55b5;
+  --color-tinte-integrador: #23908e;
+  --color-tinte-omega: #d19a12;
 
-  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  /* Tipografía: rótulo de cartel + cuerpo hiperlegible + números mono */
+  --font-display: "Bowlby One", "Arial Black", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Escala tipográfica 14/16/20/25/31/39 */
+  /* Escala tipográfica 14/16/20/25/31/39/52 */
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-xl: 1.25rem;
   --text-h3: 1.5625rem;
-  --text-h3--line-height: 1.25;
+  --text-h3--line-height: 1.2;
   --text-h2: 1.9375rem;
-  --text-h2--line-height: 1.2;
+  --text-h2--line-height: 1.15;
   --text-h1: 2.4375rem;
-  --text-h1--line-height: 1.1;
+  --text-h1--line-height: 1.05;
+  --text-titulo: 3.25rem;
+  --text-titulo--line-height: 1.02;
+  --text-cartela: 4.5rem;
+  --text-cartela--line-height: 1;
 
-  --animate-latido: latido 1.6s ease-in-out infinite;
+  /* Radios: formas infladas de goma */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.95rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.6rem;
+
+  /* Sombras duras de tinta (luz arriba-izquierda). Espejo: sombra en tokens.ts */
+  --shadow-tinta-sm: 2px 2px 0 0 var(--color-tinta);
+  --shadow-tinta: 4px 4px 0 0 var(--color-tinta);
+  --shadow-tinta-lg: 7px 7px 0 0 var(--color-tinta);
+  --shadow-oro: 4px 4px 0 0 var(--color-ambar-2), 4px 4px 0 2px var(--color-tinta);
+  --shadow-oro-sm: 2px 2px 0 0 var(--color-ambar-2);
+  --shadow-oro-md: 3px 3px 0 0 var(--color-ambar-2);
+  --inset-shadow-hueco: inset 2px 2px 0 0 rgb(19 19 19 / 0.1);
+
+  /* Movimiento: curvas elásticas de dibujo animado */
+  --ease-elastico: cubic-bezier(0.34, 1.7, 0.5, 1);
+  --ease-rebote: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-latido: latido 1.6s var(--ease-suave) infinite;
   --animate-flujo: flujo 1.4s linear infinite;
-  --animate-aparecer: aparecer 0.2s ease-out;
+  --animate-aparecer: aparecer 0.38s var(--ease-elastico) both;
+  --animate-rebote: rebote 0.9s ease-in-out infinite;
+  --animate-tambaleo: tambaleo 1.8s ease-in-out infinite;
+  --animate-estirar: estirar 0.45s var(--ease-elastico);
+  --animate-sacudida: sacudida 0.32s linear;
+  --animate-girar: girar 90s linear infinite;
+  --animate-burbuja: burbuja 2.4s ease-in infinite;
+  --animate-iris: iris 0.7s var(--ease-suave) both;
+  --animate-colorear: colorear 1.2s var(--ease-suave) both;
 
   @keyframes latido {
-    0%, 100% { opacity: 0.55; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.04); }
+    0%, 100% { opacity: 0.7; transform: scale(1, 1); }
+    50% { opacity: 1; transform: scale(1.05, 0.96); }
   }
   @keyframes flujo {
     to { stroke-dashoffset: -24; }
   }
+  /* «Pop» con estirar y encoger */
   @keyframes aparecer {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: none; }
+    0% { opacity: 0; transform: translateY(10px) scale(0.92, 1.08); }
+    60% { opacity: 1; transform: translateY(-2px) scale(1.03, 0.97); }
+    100% { opacity: 1; transform: none; }
+  }
+  /* Rebote al compás: en los cortos todo «baila» con la música */
+  @keyframes rebote {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    40% { transform: translateY(-5px) scale(0.97, 1.04); }
+    80% { transform: translateY(0) scale(1.05, 0.95); }
+  }
+  @keyframes tambaleo {
+    0%, 100% { transform: rotate(-2.5deg); }
+    50% { transform: rotate(2.5deg); }
+  }
+  @keyframes estirar {
+    0% { transform: scale(1, 1); }
+    30% { transform: scale(1.12, 0.88); }
+    60% { transform: scale(0.94, 1.06); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes sacudida {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px) rotate(-1deg); }
+    40% { transform: translateX(4px) rotate(1deg); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+  }
+  @keyframes girar {
+    to { transform: rotate(1turn); }
+  }
+  @keyframes burbuja {
+    0% { opacity: 0; transform: translateY(0) scale(0.6); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-34px) scale(1.1); }
+  }
+  /* Iris de apertura de los cortos clásicos (entrada de pantalla) */
+  @keyframes iris {
+    from { clip-path: circle(0% at 50% 50%); }
+    to { clip-path: circle(150% at 50% 50%); }
+  }
+  /* Coloreado a mano: de blanco y negro a su tinte */
+  @keyframes colorear {
+    from { filter: grayscale(1) contrast(1.2); }
+    to { filter: none; }
+  }
+  @keyframes parpadeo-pelicula {
+    0%, 100% { opacity: 0.11; }
+    25% { opacity: 0.15; }
+    50% { opacity: 0.09; }
+    75% { opacity: 0.13; }
+  }
+  @keyframes rayones {
+    0% { background-position: 0 0, 37% 0, 81% 0; }
+    33% { background-position: 0 0, 52% 0, 12% 0; }
+    66% { background-position: 0 0, 18% 0, 64% 0; }
+    100% { background-position: 0 0, 71% 0, 33% 0; }
   }
 }
 
-/* Variables espejo en :root para quien no pasa por Tailwind (canvas lee tokens.ts). */
+/* Variables fuera de Tailwind (canvas lee tokens.ts). */
 :root {
   color-scheme: light;
-  --fondo: #f1efe9;
-  --primario: #2d7a67;
-  --hostil: #c4483a;
+  --fondo: #e6e5df;
+  --primario: #131313;
+  --hostil: #c8102e;
+  --trazo-fino: 1.5px;
+  --trazo-medio: 2.5px;
+  --trazo-grueso: 4px;
+  --duracion-rapida: 140ms;
+  --duracion-normal: 260ms;
+  --duracion-lenta: 520ms;
+  /* Grano de película procedural (SVG feTurbulence en tinta). */
+  --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Semitono de imprenta (puntos de tinta) */
+  --semitono: radial-gradient(circle at center, rgb(19 19 19 / 0.22) 1.1px, transparent 1.4px);
 }
 
 @layer base {
   html {
+    /* Plata con viñeta de proyector */
     background:
-      radial-gradient(1200px 600px at 85% -10%, color-mix(in oklab, var(--color-primario-2) 22%, transparent), transparent 70%),
-      radial-gradient(900px 500px at -10% 110%, color-mix(in oklab, var(--color-ambar) 8%, transparent), transparent 70%),
+      radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgb(19 19 19 / 0.3) 100%),
+      radial-gradient(800px 500px at 50% 0%, rgb(255 255 255 / 0.65), transparent 70%),
       var(--color-fondo);
     background-attachment: fixed;
     color: var(--color-tinta);
@@ -73,67 +196,126 @@
   body {
     margin: 0;
     min-height: 100dvh;
-    line-height: 1.5;
+    line-height: 1.55;
+  }
+  /* Perforaciones de la cinta en los bordes (pantallas anchas) */
+  @media (min-width: 1440px) {
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(to bottom, transparent 0 10px, var(--color-fondo) 10px 26px, transparent 26px 36px) left 10px top 0 / 14px 100% no-repeat,
+        repeating-linear-gradient(to bottom, transparent 0 10px, var(--color-fondo) 10px 26px, transparent 26px 36px) right 10px top 0 / 14px 100% no-repeat,
+        linear-gradient(var(--color-tinta), var(--color-tinta)) left 0 top 0 / 34px 100% no-repeat,
+        linear-gradient(var(--color-tinta), var(--color-tinta)) right 0 top 0 / 34px 100% no-repeat;
+    }
+  }
+  /* Grano + rayones de película encima de todo, sin capturar el puntero */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    pointer-events: none;
+    background:
+      var(--grano) 0 0 / 160px 160px,
+      linear-gradient(90deg, transparent 0 calc(50% - 0.5px), rgb(19 19 19 / 0.5) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) 37% 0 / 3px 100% no-repeat,
+      linear-gradient(90deg, transparent 0 calc(50% - 0.5px), rgb(255 255 255 / 0.9) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) 81% 0 / 3px 100% no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0.12;
+    animation:
+      parpadeo-pelicula 0.5s steps(4) infinite,
+      rayones 1.6s steps(3) infinite;
+  }
+  #root {
+    position: relative;
+    z-index: 1;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-weight: 400; /* Bowlby One ya es ultranegra */
+    letter-spacing: 0.01em;
     text-wrap: balance;
+    color: var(--color-tinta);
+  }
+  /* Títulos principales: sombra plateada de rótulo de cartel */
+  h1 {
+    text-shadow: 3px 3px 0 var(--color-primario-2);
   }
   :focus-visible {
-    outline: 2px solid var(--color-ambar);
-    outline-offset: 2px;
+    outline: var(--trazo-medio) solid var(--color-tinta);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px var(--color-ambar-2);
   }
   ::selection {
-    background: color-mix(in oklab, var(--color-primario) 35%, transparent);
+    background: var(--color-ambar-2);
+    color: var(--color-tinta);
   }
   dialog::backdrop {
-    background: rgb(34 48 45 / 0.45);
-    backdrop-filter: blur(3px);
+    background: radial-gradient(ellipse at center, rgb(19 19 19 / 0.45), rgb(19 19 19 / 0.82));
+    backdrop-filter: grayscale(1) blur(2px);
   }
   input, select, textarea, button {
     font: inherit;
   }
+  hr {
+    border: 0;
+    border-top: var(--trazo-fino) dashed var(--color-linea);
+  }
 }
 
 @layer components {
-  /* Botones: uno primario por vista, el resto secundario o fantasma. */
+  /* Botones de goma: contorno de tinta, sombra dura y «aplastado» al pulsar.
+     Uno primario por vista; el resto secundario o fantasma. */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.5rem;
-    padding: 0.45rem 1rem;
+    min-height: 2.6rem;
+    padding: 0.45rem 1.1rem;
     border-radius: 999px;
-    border: 1px solid var(--color-linea);
+    border: var(--trazo-medio) solid var(--color-tinta);
     background: var(--color-panel);
     color: var(--color-tinta);
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 400;
     font-size: var(--text-sm);
+    letter-spacing: 0.03em;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgb(34 48 45 / 0.06);
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    box-shadow: var(--shadow-tinta-sm);
+    transition:
+      transform var(--duracion-rapida) var(--ease-elastico),
+      box-shadow var(--duracion-rapida) var(--ease-elastico),
+      background-color var(--duracion-rapida);
   }
   .btn:hover:not(:disabled) {
-    border-color: var(--color-primario-2);
-    background: var(--color-panel-2);
+    background: var(--color-papel);
+    transform: translate(-1px, -2px) rotate(-1deg);
+    box-shadow: 3px 4px 0 0 var(--color-tinta);
+  }
+  .btn:active:not(:disabled) {
+    transform: translate(2px, 2px) scale(1.04, 0.94);
+    box-shadow: 0 0 0 0 var(--color-tinta);
   }
   .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
+    box-shadow: none;
+    border-style: dashed;
   }
+  /* Primario: tinta sólida con sombra dorada (es «lo que hay que pulsar») */
   .btn-primario {
-    background: var(--color-primario);
-    border-color: var(--color-primario);
-    color: #ffffff;
-    box-shadow: 0 2px 6px color-mix(in oklab, var(--color-primario) 30%, transparent);
+    background: var(--color-tinta);
+    color: var(--color-papel);
+    box-shadow: 3px 3px 0 0 var(--color-ambar-2), 3px 3px 0 var(--trazo-fino) var(--color-tinta);
   }
   .btn-primario:hover:not(:disabled) {
-    background: #246656;
-    border-color: #246656;
+    background: var(--color-tinta);
+    box-shadow: 4px 5px 0 0 var(--color-ambar-2), 4px 5px 0 var(--trazo-fino) var(--color-tinta);
   }
   .btn-fantasma {
     background: transparent;
@@ -143,55 +325,221 @@
   }
   .btn-fantasma:hover:not(:disabled) {
     color: var(--color-tinta);
-    background: color-mix(in oklab, var(--color-primario-2) 18%, transparent);
+    background: color-mix(in oklab, var(--color-ambar-2) 35%, transparent);
     border-color: transparent;
+    box-shadow: none;
   }
-  /* Tarjeta de laboratorio: panel blanco con sombra suave. */
+  .btn-fantasma:active:not(:disabled) {
+    box-shadow: none;
+  }
+  /* Peligro (acciones destructivas o de OMEGA) */
+  .btn-peligro {
+    background: var(--color-hostil);
+    color: var(--color-papel);
+  }
+
+  /* Tarjeta: fotograma blanco con contorno de tinta y sombra dura */
   .tarjeta {
-    border: 1px solid var(--color-linea);
-    border-radius: 1rem;
+    position: relative;
+    border: var(--trazo-medio) solid var(--color-tinta);
+    border-radius: var(--radius-xl);
     background: var(--color-panel);
-    box-shadow: 0 1px 2px rgb(34 48 45 / 0.04), 0 8px 24px -12px rgb(34 48 45 / 0.12);
+    box-shadow: var(--shadow-tinta);
   }
+  .tarjeta .tarjeta {
+    box-shadow: var(--shadow-tinta-sm);
+    border-width: var(--trazo-fino);
+  }
+
   .campo {
     width: 100%;
-    min-height: 2.5rem;
-    padding: 0.4rem 0.65rem;
-    border-radius: 0.6rem;
-    border: 1px solid var(--color-linea);
+    min-height: 2.6rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius-md);
+    border: var(--trazo-medio) solid var(--color-tinta);
     background: var(--color-campo);
     color: var(--color-tinta);
+    box-shadow: var(--inset-shadow-hueco);
+    transition: box-shadow var(--duracion-rapida), background-color var(--duracion-rapida);
+  }
+  .campo::placeholder {
+    color: color-mix(in oklab, var(--color-tenue) 75%, transparent);
   }
   .campo:focus-visible {
-    outline: 2px solid var(--color-primario);
-    outline-offset: 0;
-    border-color: transparent;
+    outline: none;
+    background: var(--color-papel);
+    box-shadow: var(--inset-shadow-hueco), 0 0 0 4px var(--color-ambar-2);
   }
   .campo[aria-invalid="true"] {
     border-color: var(--color-hostil);
+    box-shadow: var(--inset-shadow-hueco), 0 0 0 4px color-mix(in oklab, var(--color-hostil) 25%, transparent);
   }
+
   .kbd {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.6rem;
-    padding: 0 0.35rem;
-    border-radius: 0.3rem;
-    border: 1px solid var(--color-linea);
-    border-bottom-width: 2px;
-    background: var(--color-panel);
-    font-family: var(--font-display);
-    font-size: 0.8rem;
-    font-weight: 600;
+    min-width: 1.7rem;
+    padding: 0 0.4rem;
+    border-radius: var(--radius-sm);
+    border: var(--trazo-fino) solid var(--color-tinta);
+    background: var(--color-papel);
+    box-shadow: 0 2px 0 0 var(--color-tinta);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
     color: var(--color-tinta);
   }
   .numero {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
+
+  /* ---------- Piezas propias de «Cinta de Plata» ---------- */
+
+  /* Intertítulo de cine mudo: cartela negra con marco doble blanco */
+  .intertitulo {
+    position: relative;
+    padding: 0.9rem 1.25rem;
+    background: var(--color-tinta);
+    color: var(--color-papel);
+    outline: var(--trazo-fino) solid var(--color-papel);
+    outline-offset: -7px;
+  }
+  .intertitulo :where(h1, h2, h3, h4) {
+    color: var(--color-papel);
+    text-shadow: none;
+  }
+  .intertitulo :where(p, small, span) {
+    color: color-mix(in oklab, var(--color-papel) 82%, var(--color-tinta));
+  }
+  /* Cartel: etiqueta dorada ligeramente torcida (lo que pide atención) */
+  .cartel {
+    display: inline-block;
+    padding: 0.35rem 1.1rem;
+    border: var(--trazo-medio) solid var(--color-tinta);
+    border-radius: var(--radius-md);
+    background: var(--color-ambar-2);
+    color: var(--color-tinta);
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-tinta-sm);
+    transform: rotate(-1.5deg);
+  }
+  /* Rótulo blanco con contorno de tinta */
+  .titulo-tinta {
+    color: var(--color-papel);
+    -webkit-text-stroke: 1.5px var(--color-tinta);
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 var(--color-tinta);
+  }
+  /* Marco de fotograma: borde doble como cartela */
+  .fotograma {
+    border: var(--trazo-grueso) double var(--color-tinta);
+    border-radius: var(--radius-lg);
+    background: var(--color-panel);
+    box-shadow: var(--shadow-tinta);
+  }
+  /* Chapa redonda de goma */
+  .chapa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.1rem 0.6rem;
+    border: var(--trazo-fino) solid var(--color-tinta);
+    border-radius: 999px;
+    background: var(--color-papel);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+  /* Relleno de semitono (sombras, zonas bloqueadas, fondos de sección) */
+  .semitono {
+    background-image: var(--semitono);
+    background-size: 6px 6px;
+  }
+  /* Tira de película horizontal (separador decorativo con perforaciones) */
+  .tira-pelicula {
+    height: 22px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 8px, var(--color-papel) 8px 20px, transparent 20px 28px) 0 50% / 100% 8px no-repeat,
+      var(--color-tinta);
+    border-radius: 3px;
+  }
+  /* Rayos de sol de los cortos clásicos */
+  .rayos {
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      color-mix(in oklab, var(--color-tinta) 14%, transparent) 0deg 9deg,
+      transparent 9deg 18deg
+    );
+    mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  }
+  /* Medidor de goma: tubo con contorno de tinta y líquido a rayas */
+  .medidor {
+    position: relative;
+    height: 0.9rem;
+    overflow: hidden;
+    border: var(--trazo-fino) solid var(--color-tinta);
+    border-radius: 999px;
+    background: var(--color-panel-2);
+    box-shadow: var(--inset-shadow-hueco);
+  }
+  .medidor-relleno {
+    height: 100%;
+    border-right: var(--trazo-fino) solid var(--color-tinta);
+    border-radius: 999px;
+    background:
+      repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.3) 0 5px, transparent 5px 10px),
+      currentColor;
+    transition: width var(--duracion-lenta) var(--ease-elastico);
+  }
+  /* Tabla de fotograma: cabecera de tinta, filas alternas en plata */
+  .tabla-cine {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: var(--trazo-medio) solid var(--color-tinta);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-panel);
+  }
+  /* Variante con cabecera fija: el contenedor hace el scroll y recorta */
+  .tabla-cine-fija {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+  .tabla-cine-fija th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .tabla-cine th {
+    background: var(--color-tinta);
+    color: var(--color-papel);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 0.45rem 0.7rem;
+    text-align: left;
+  }
+  .tabla-cine td {
+    padding: 0.35rem 0.7rem;
+    border-top: 1px solid var(--color-linea);
+  }
+  .tabla-cine tbody tr:nth-child(even) td {
+    background: var(--color-panel-2);
+  }
+  /* Entrada de pantalla con iris (usar en el contenedor raíz de cada pantalla) */
+  .entrada-iris {
+    animation: var(--animate-iris);
+  }
 }
 
-/* KaTeX hereda el color del texto y no desborda. */
+/* KaTeX hereda el color de la tinta y no desborda. */
 .katex { color: inherit; font-size: 1.08em; }
 .katex-display { margin: 0.4rem 0; overflow-x: auto; overflow-y: hidden; padding: 0.2rem 0; }
 
@@ -201,4 +549,7 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  body::after { animation: none; opacity: 0.1; }
+  .entrada-iris { animation: none; }
+  .btn:hover:not(:disabled), .btn:active:not(:disabled) { transform: none; }
 }

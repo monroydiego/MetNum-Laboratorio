@@ -127,3 +127,26 @@ export interface EvidenciaFormCampos {
   error: string; // vacío si el método no reporta Є
   iteraciones_json: string; // JSON.stringify(filas)
 }
+
+/** Espejo de ResumenMatriculaOut: matrículas que ya enviaron respuestas (GET /api/docente/matriculas). */
+export interface ResumenMatriculaDTO {
+  matricula: string;
+  intentos: number;
+  correctos: number;
+  incorrectos: number;
+  ultima_fecha: string;
+  /** Mejor tiempo de misión en ms (null si aún no gana). */
+  record_ms: number | null;
+}
+
+/** Espejo de RecordOut (POST /api/records al ganar). */
+export interface RecordDTO {
+  tiempo_ms: number;
+  record_ms: number;
+  nuevo_record: boolean;
+}
+
+/** Espejo de DocenteOut (POST /api/docente/login, GET /api/docente/sesion). */
+export interface DocenteDTO {
+  correo: string;
+}

@@ -1,4 +1,4 @@
-"""Modo Comprobación Docente: POST /api/evidencias (multipart) y GET /api/evidencias."""
+"""Modo Comprobación Docente: POST/GET /api/evidencias y GET /api/docente/matriculas. Todo exige sesión de docente."""
 import json
 from typing import Annotated
 
@@ -8,10 +8,13 @@ from app.domain.funciones import ErrorMetodo
 from app.domain.repositories import EvidenciaGuardada
 from app.infrastructure.local_storage import LocalFileStorage
 from app.infrastructure.sqlite_repo import SQLiteEvidenciaRepo
-from app.presentation.schemas import ErrorOut, EvidenciaOut
+from app.domain.entities import Docente
+from app.presentation.routes_auth import exigir_docente
+from app.presentation.schemas import ErrorOut, EvidenciaOut, ResumenMatriculaOut
 from app.use_cases.gestionar_evidencia import GestionarEvidencia, ImagenSubida
 
-router = APIRouter(prefix="/api/evidencias", tags=["modo comprobación"])
+router = APIRouter(prefix="/api/evidencias", tags=["modo comprobación"], dependencies=[Depends(exigir_docente)])
+matriculas = APIRouter(prefix="/api/docente", tags=["modo comprobación"], dependencies=[Depends(exigir_docente)])
 
 
 def obtener_caso_uso() -> GestionarEvidencia:
@@ -82,3 +85,9 @@ def listar_evidencias(
     caso_uso: GestionarEvidencia = Depends(obtener_caso_uso),
 ) -> list[EvidenciaOut]:
     return [a_salida(g) for g in caso_uso.listar(limite, matricula)]
+
+
+@matriculas.get("/matriculas", response_model=list[ResumenMatriculaOut])
+def listar_matriculas(caso_uso: GestionarEvidencia = Depends(obtener_caso_uso)) -> list[ResumenMatriculaOut]:
+    """Matrículas que ya enviaron al menos una respuesta, con su conteo de intentos."""
+    return [ResumenMatriculaOut(**vars(r)) for r in caso_uso.resumen_matriculas()]

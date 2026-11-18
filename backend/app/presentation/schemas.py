@@ -100,3 +100,12 @@ class EvidenciaOut(BaseModel):
     foto_canvas_url: str = Field(description='"" en los intentos de respuesta del juego')
     correcta: bool | None = Field(None, description="Intento del juego: ¿correcta? (None = Modo Comprobación)")
     fecha_registro: str
+
+
+class ResumenMatriculaOut(BaseModel):
+    matricula: str
+    intentos: int
+    correctos: int
+    incorrectos: int
+    ultima_fecha: str
+    record_ms: int | None = None

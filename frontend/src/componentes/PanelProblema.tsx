@@ -3,7 +3,7 @@
 // Solo si la respuesta coincide (parte entera y 3 decimales) se muestra la resolución completa y la consola
 // queda resuelta; cada respuesta incorrecta le quita 5 de vida al personaje.
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { BookOpen, Camera, CheckCircle2, HeartCrack, ImagePlus, PencilLine, ShieldCheck, XCircle } from 'lucide-react';
+import { AlertTriangle, BookOpen, Camera, Check, CheckCircle2, Heart, HeartCrack, ImagePlus, PencilLine, Star, XCircle } from 'lucide-react';
 import { calcular, mensajeDeError, obtenerProblema, revisarProblema, verificarRespuesta } from '../services/apiClient';
 import type { EvidenciaDTO, MetodoInfoDTO, ResultadoNumericoDTO } from '../types/numericos';
 import { camposDesdeEsquema, valoresDesdeEjemplo, valoresIniciales, type ValoresFormulario } from '../utilidades/esquema';
@@ -52,6 +52,8 @@ export function PanelProblema(props: Props) {
   const [matricula, setMatricula] = useState(props.matricula);
   const [foto, setFoto] = useState<File | null>(null);
   const [urlFoto, setUrlFoto] = useState<string | null>(null);
+  // Solo presentación: resalta el marco de la foto mientras se arrastra un archivo encima.
+  const [arrastrando, setArrastrando] = useState(false);
 
   // Lo que se lee solo al montar (el problema vigente) y los callbacks, sin reiniciar el efecto.
   const inicial = useRef({ problema: props.problema, yaResuelto });
@@ -169,66 +171,91 @@ export function PanelProblema(props: Props) {
     }
   }
 
+  // Paso que pide atención ahora (solo presentación): respuesta → foto → verificar.
+  const respondido = actual ? actual.campos.every((c) => (respuesta[c] ?? '').trim()) : false;
+  const pasoActual = resuelto ? 0 : !respondido ? 2 : !foto ? 3 : 4;
+
   return (
     <div className="flex flex-col gap-6">
       {/* Encabezado: referencia del libro y estado del personaje. */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-tenue">
-        <p className="m-0 flex items-center gap-2">
-          <BookOpen size={16} aria-hidden /> Unidad {ROMANOS[metodo.unidad] ?? metodo.unidad}
+      <div className="flex flex-wrap items-center gap-2 text-sm text-tenue">
+        <p className="chapa m-0 rounded-xl py-1 font-sans text-sm tracking-normal text-tinta">
+          <BookOpen size={15} aria-hidden /> Unidad {ROMANOS[metodo.unidad] ?? metodo.unidad}
           {metodo.capitulo ? `, ${metodo.capitulo}` : ''}, página {metodo.pagina} del libro
         </p>
         {vida !== undefined && (
-          <p className="m-0 flex items-center gap-1.5 sm:ml-auto">
-            Vida <span className="numero font-semibold text-tinta">{Math.ceil(vida)}%</span>
+          <p className="m-0 flex flex-wrap items-center gap-2 sm:ml-auto">
+            <span className="chapa py-1 font-sans text-sm tracking-normal text-tinta">
+              <Heart size={15} className="fill-tinta" aria-hidden /> Vida <span className="numero font-bold">{Math.ceil(vida)}%</span>
+            </span>
             {vidas !== undefined && (
-              <>
-                · Vidas <span className="numero font-semibold text-tinta">{vidas}</span>
-              </>
+              <span className="chapa py-1 font-sans text-sm tracking-normal text-tinta">
+                Vidas <span className="numero font-bold">{vidas}</span>
+              </span>
             )}
-            <span>· cada error resta {VIDA_POR_RESPUESTA_INCORRECTA}</span>
+            <span>Cada error resta {VIDA_POR_RESPUESTA_INCORRECTA}.</span>
           </p>
         )}
       </div>
 
-      {cargando && <p className="m-0 text-tenue">Planteando el problema…</p>}
-      {sinDatos && <p className="m-0 text-menta">Esta consola ya estaba resuelta en tu partida guardada.</p>}
+      {cargando && (
+        <p className="m-0 flex items-center gap-2 text-tenue">
+          <PencilLine size={18} className="animate-tambaleo" aria-hidden /> Planteando el problema…
+        </p>
+      )}
+      {sinDatos && (
+        <p className="m-0 flex items-center gap-2 rounded-xl border-[length:var(--trazo-fino)] border-menta bg-menta-2 px-3 py-2 text-menta">
+          <CheckCircle2 size={18} aria-hidden /> Esta consola ya estaba resuelta en tu partida guardada.
+        </p>
+      )}
 
       {actual && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-          {/* 1. Problema (solo lectura) */}
-          <section className="tarjeta flex min-w-0 flex-col gap-3 p-5" aria-labelledby={`${id}-problema`}>
-            <h3 id={`${id}-problema`} className="m-0 flex items-center gap-2 text-xl">
-              <Paso n={1} /> Problema
-            </h3>
-            <p className="m-0 text-sm text-tenue">Resuélvelo a mano con el método del libro, en tu cuaderno.</p>
-            <FormularioMetodo campos={campos} valores={valores} errores={{}} onCambio={SIN_EFECTO} deshabilitado />
+          {/* 1. Problema (solo lectura): cartela de cine mudo + datos en un fotograma. */}
+          <section className="tarjeta flex min-w-0 flex-col self-start overflow-hidden max-lg:w-full" aria-labelledby={`${id}-problema`}>
+            <header className="intertitulo m-2 rounded-lg px-5 py-4 text-center">
+              <h3 id={`${id}-problema`} className="m-0 flex items-center justify-center gap-3 text-xl sm:text-h3">
+                <Paso n={1} hecho={resuelto} invertido /> El problema
+              </h3>
+              <p className="m-0 mt-1 text-sm">Resuélvelo a mano con el método del libro, en tu cuaderno.</p>
+            </header>
+            <div className="p-4 pt-2 sm:p-5 sm:pt-3 [&_.campo:disabled]:cursor-default [&_.campo:disabled]:border-[length:var(--trazo-fino)] [&_.campo:disabled]:bg-panel-2 [&_.campo:disabled]:shadow-none [&_.editor-control]:hidden">
+              <FormularioMetodo campos={campos} valores={valores} errores={{}} onCambio={SIN_EFECTO} deshabilitado />
+            </div>
           </section>
 
           {/* 2–4. Respuesta, foto y verificación */}
           <form onSubmit={verificar} className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-0 lg:self-start" noValidate>
-            <fieldset className="tarjeta m-0 flex min-w-0 flex-col gap-3 p-5">
+            <fieldset
+              className={`tarjeta m-0 flex min-w-0 flex-col gap-3 p-4 transition-shadow sm:p-5 ${pasoActual === 2 ? 'shadow-oro' : ''} ${resuelto ? 'animate-colorear border-menta bg-menta-2' : ''}`}
+            >
               <legend className="sr-only">Tu respuesta</legend>
               <h3 className="m-0 flex items-center gap-2 text-xl" aria-hidden>
-                <Paso n={2} /> Tu respuesta
+                <Paso n={2} activo={pasoActual === 2} hecho={respondido || resuelto} /> Tu respuesta
               </h3>
               {!resuelto && <p className="m-0 text-sm text-tenue">Debe coincidir desde la parte entera hasta el 3.er decimal.</p>}
               {actual.campos.map((c) => {
-                const ok = veredicto?.[c];
+                const ok = resuelto || veredicto?.[c] === true ? true : veredicto?.[c] === false ? false : undefined;
                 return (
-                  <label key={c} className="flex flex-col gap-1 text-sm">
-                    <span className="flex items-center gap-2 font-semibold">
+                  <label key={c} className="flex flex-col gap-1.5 text-sm">
+                    <span className="flex items-center gap-2 font-display text-base">
                       <NombreResultado clave={c} />
-                      {resuelto || ok === true ? (
-                        <CheckCircle2 size={14} className="text-menta" aria-label="Correcto" />
+                      {ok === true ? (
+                        <span className="chapa border-menta bg-menta-2 font-sans text-sm tracking-normal text-menta">
+                          <CheckCircle2 size={14} aria-hidden /> Correcto
+                        </span>
                       ) : ok === false ? (
-                        <XCircle size={14} className="text-hostil" aria-label="Incorrecto" />
+                        <span className="chapa border-hostil font-sans text-sm tracking-normal text-hostil">
+                          <XCircle size={14} aria-hidden /> Incorrecto
+                        </span>
                       ) : null}
                     </span>
                     <input
-                      className="campo numero"
+                      className={`campo numero min-h-14 text-xl ${ok === true ? 'border-menta bg-menta-2 text-menta disabled:opacity-100' : ''}`}
                       inputMode="decimal"
                       autoComplete="off"
                       spellCheck={false}
+                      placeholder="0.000"
                       value={respuesta[c] ?? ''}
                       disabled={resuelto || verificando}
                       aria-invalid={ok === false ? true : undefined}
@@ -243,68 +270,123 @@ export function PanelProblema(props: Props) {
             </fieldset>
 
             {!resuelto && (
-              <fieldset className="tarjeta m-0 flex min-w-0 flex-col gap-3 p-5">
+              <fieldset className={`tarjeta m-0 flex min-w-0 flex-col gap-3 p-4 transition-shadow sm:p-5 ${pasoActual === 3 ? 'shadow-oro' : ''}`}>
                 <legend className="sr-only">Foto de tu procedimiento</legend>
                 <h3 className="m-0 flex items-center gap-2 text-xl" aria-hidden>
-                  <Paso n={3} /> Foto de tu procedimiento
+                  <Paso n={3} activo={pasoActual === 3} hecho={Boolean(foto)} /> Foto de tu procedimiento
                 </h3>
                 <p className="m-0 text-sm text-tenue">Obligatoria: tu docente la revisará en el Panel Docente. PNG, JPG o WebP de hasta 8 MB.</p>
-                <label
-                  htmlFor={`${id}-foto`}
-                  className={`flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed p-3 text-center text-sm transition-colors ${
-                    foto ? 'border-primario-2 bg-panel-2' : 'border-linea hover:border-primario-2'
-                  }`}
-                >
-                  {urlFoto ? (
-                    <img src={urlFoto} alt="Vista previa de tu procedimiento" className="max-h-44 w-full rounded-lg object-contain" />
-                  ) : (
-                    <>
-                      <ImagePlus size={28} className="text-primario" aria-hidden />
-                      <span className="font-semibold text-tinta">Elegir o tomar foto</span>
-                    </>
-                  )}
-                  {foto && (
-                    <span className="flex items-center gap-1 text-tenue">
-                      <Camera size={14} aria-hidden /> {foto.name} · cambiar
-                    </span>
-                  )}
-                </label>
                 <input
                   id={`${id}-foto`}
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  className="sr-only"
+                  className="peer sr-only"
                   disabled={verificando}
                   onChange={(e) => elegirFoto(e.target.files?.[0] ?? null)}
                 />
+                {/* Marco de foto antigua: esquinas de álbum, borde punteado dorado al arrastrar. */}
+                <label
+                  htmlFor={`${id}-foto`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!verificando && !arrastrando) setArrastrando(true);
+                  }}
+                  onDragLeave={() => setArrastrando(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setArrastrando(false);
+                    const archivo = e.dataTransfer.files?.[0];
+                    if (archivo && !verificando) elegirFoto(archivo);
+                  }}
+                  className={`relative mx-1 my-1 block cursor-pointer rounded-sm border-[length:var(--trazo-medio)] bg-papel p-3 text-center text-sm transition-transform duration-200 ease-elastico peer-focus-visible:outline-[length:var(--trazo-medio)] peer-focus-visible:outline-offset-4 peer-focus-visible:outline-tinta peer-disabled:cursor-wait ${
+                    arrastrando
+                      ? 'scale-[1.02] -rotate-1 border-dashed border-ambar-2 bg-ambar-2/15 shadow-oro'
+                      : foto
+                        ? 'rotate-1 border-tinta shadow-tinta'
+                        : 'border-dashed border-tinta shadow-tinta-sm hover:-rotate-1'
+                  }`}
+                >
+                  <EsquinasFoto />
+                  <span
+                    className={`flex min-h-40 flex-col items-center justify-center gap-2 overflow-hidden rounded-sm p-2 ${urlFoto ? 'bg-panel-2' : 'semitono bg-panel-2'}`}
+                  >
+                    {urlFoto ? (
+                      <img src={urlFoto} alt="Vista previa de tu procedimiento" className="max-h-48 w-full animate-colorear object-contain" />
+                    ) : (
+                      <>
+                        <span className="grid size-12 place-items-center rounded-full border-[length:var(--trazo-medio)] border-tinta bg-ambar-2 shadow-tinta-sm">
+                          <ImagePlus size={24} className="text-tinta" aria-hidden />
+                        </span>
+                        <span className="rounded-md bg-papel px-2 font-display text-base text-tinta">Elegir o tomar foto</span>
+                        <span className="rounded-md bg-papel px-2 text-tenue max-sm:hidden">o arrastra la imagen hasta este marco</span>
+                      </>
+                    )}
+                  </span>
+                  {foto && (
+                    <span className="mt-2 flex items-center justify-center gap-1.5 text-tenue">
+                      <Camera size={14} className="shrink-0" aria-hidden /> <span className="truncate">{foto.name}</span>
+                      <span className="shrink-0 font-semibold text-tinta underline decoration-2 underline-offset-2">cambiar</span>
+                    </span>
+                  )}
+                </label>
                 {!props.matricula && (
-                  <label className="flex flex-col gap-1 text-sm font-semibold">
+                  <label className="flex flex-col gap-1.5 font-display text-sm">
                     Matrícula
-                    <input className="campo numero" value={matricula} maxLength={20} inputMode="numeric" autoComplete="off" onChange={(e) => setMatricula(e.target.value)} />
+                    <input className="campo numero font-normal" value={matricula} maxLength={20} inputMode="numeric" autoComplete="off" onChange={(e) => setMatricula(e.target.value)} />
                   </label>
                 )}
               </fieldset>
             )}
 
             {error && actual && (
-              <p role="alert" className="m-0 rounded-xl border border-hostil/40 bg-hostil/8 px-3 py-2 text-sm text-hostil">
+              <p role="alert" className="m-0 flex items-start gap-2 rounded-xl border-[length:var(--trazo-fino)] border-hostil bg-papel px-3 py-2 text-sm text-hostil">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
                 {error}
               </p>
             )}
             {fallos > 0 && !resuelto && (
-              <p role="alert" className="m-0 flex items-start gap-2 rounded-xl border border-hostil/40 bg-hostil/8 px-3 py-2 text-sm text-hostil">
-                <HeartCrack size={16} className="mt-0.5 shrink-0" aria-hidden />
-                Respuesta incorrecta: perdiste {VIDA_POR_RESPUESTA_INCORRECTA} de vida
-                {fallos > 1 ? ` (${fallos} intentos fallidos)` : ''}. Revisa tu procedimiento e inténtalo de nuevo.
-              </p>
+              <div
+                key={fallos}
+                role="alert"
+                className="flex animate-sacudida items-start gap-3 rounded-xl border-[length:var(--trazo-medio)] border-hostil bg-papel p-3 text-sm text-hostil shadow-tinta-sm"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full border-[length:var(--trazo-medio)] border-tinta bg-hostil text-papel">
+                  <HeartCrack size={20} aria-hidden />
+                </span>
+                <p className="m-0">
+                  <strong className="block font-display text-base font-normal">Respuesta incorrecta</strong>
+                  Perdiste {VIDA_POR_RESPUESTA_INCORRECTA} de vida
+                  {fallos > 1 ? ` (${fallos} intentos fallidos)` : ''}. Revisa tu procedimiento e inténtalo de nuevo.
+                </p>
+              </div>
             )}
             {resuelto ? (
-              <p className="m-0 flex items-start gap-2 rounded-xl border border-menta/40 bg-menta/8 px-3 py-2 text-sm text-menta">
-                <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden />
-                ¡Respuesta correcta! Consola resuelta{folio ? ` (folio ${folio} en el Panel Docente)` : ''}. La resolución completa está abajo.
-              </p>
+              <div className="relative flex animate-colorear items-start gap-3 rounded-xl border-[length:var(--trazo-medio)] border-menta bg-menta-2 p-3 text-sm text-menta shadow-tinta-sm">
+                <span className="relative grid size-10 shrink-0 animate-estirar place-items-center rounded-full border-[length:var(--trazo-medio)] border-tinta bg-menta text-papel">
+                  <Check size={22} strokeWidth={3} aria-hidden />
+                </span>
+                <p className="m-0">
+                  <strong className="block font-display text-base font-normal">¡Respuesta correcta!</strong>
+                  Consola resuelta{folio ? ` (folio ${folio} en el Panel Docente)` : ''}. La resolución completa está abajo.
+                </p>
+                {/* Estallido de estrellas doradas */}
+                <span className="pointer-events-none absolute -top-3 right-3 flex gap-1" aria-hidden>
+                  {[0, 1, 2].map((k) => (
+                    <Star
+                      key={k}
+                      size={k === 1 ? 22 : 16}
+                      className="animate-aparecer fill-ambar-2 text-tinta"
+                      style={{ animationDelay: `${120 + k * 90}ms` }}
+                    />
+                  ))}
+                </span>
+              </div>
             ) : (
-              <button type="submit" className="btn btn-primario w-full py-3 text-base" disabled={verificando || cargando}>
+              <button
+                type="submit"
+                className={`btn btn-primario w-full py-3 text-base ${pasoActual === 4 ? 'animate-estirar' : ''}`}
+                disabled={verificando || cargando}
+              >
                 <CheckCircle2 size={18} aria-hidden /> {verificando ? 'Verificando…' : 'Verificar respuesta'}
               </button>
             )}
@@ -313,24 +395,22 @@ export function PanelProblema(props: Props) {
       )}
 
       {error && !actual && (
-        <p role="alert" className="m-0 rounded-xl border border-hostil/40 bg-hostil/8 px-3 py-2 text-sm text-hostil">
+        <p role="alert" className="m-0 flex items-start gap-2 rounded-xl border-[length:var(--trazo-fino)] border-hostil bg-papel px-3 py-2 text-sm text-hostil">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
           {error}
         </p>
       )}
 
       <div ref={resolucionRef} className="flex min-w-0 scroll-mt-4 flex-col gap-6" aria-live="polite">
         {resultado && actual ? (
-          <>
-            <h3 className="m-0 flex items-center gap-2 text-xl">
-              <PencilLine size={18} className="text-primario" aria-hidden /> Resolución completa
-            </h3>
-            <Resolucion slug={metodo.slug} resultado={resultado} entrada={actual.entrada} matricula={matricula} nivel={nivel} onEvidencia={onEvidencia} />
-          </>
+          <Resolucion slug={metodo.slug} resultado={resultado} entrada={actual.entrada} matricula={matricula} nivel={nivel} onEvidencia={onEvidencia} />
         ) : (
           actual && (
-            <p className="m-0 rounded-xl border border-dashed border-linea p-5 text-sm text-tenue">
-              La resolución completa (procedimiento, tabla y gráfica) aparecerá aquí cuando tu respuesta sea correcta.
-            </p>
+            <div className="semitono rounded-xl border-[length:var(--trazo-fino)] border-dashed border-tinta/40 p-5">
+              <p className="m-0 max-w-prose rounded-md bg-panel px-2 py-1 text-sm text-tenue">
+                La resolución completa (procedimiento, tabla y gráfica) aparecerá aquí cuando tu respuesta sea correcta.
+              </p>
+            </div>
           )
         )}
       </div>
@@ -338,10 +418,32 @@ export function PanelProblema(props: Props) {
   );
 }
 
-function Paso({ n }: { n: number }) {
+/** Número de paso (secuencia real 1–3): dorado si es el paso actual, palomita si ya se cumplió. */
+function Paso({ n, activo, hecho, invertido }: { n: number; activo?: boolean; hecho?: boolean; invertido?: boolean }) {
+  const base = 'grid size-8 shrink-0 place-items-center rounded-full border-[length:var(--trazo-medio)] font-display text-sm';
+  const estilo = activo
+    ? 'animate-rebote border-tinta bg-ambar-2 text-tinta shadow-tinta-sm'
+    : hecho
+      ? 'border-tinta bg-menta text-papel'
+      : invertido
+        ? 'border-papel bg-papel text-tinta'
+        : 'border-tinta bg-tinta text-papel';
   return (
-    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primario text-sm font-bold text-white" aria-hidden>
-      {n}
+    <span className={`${base} ${estilo}`} aria-hidden>
+      {hecho && !activo ? <Check size={16} strokeWidth={3} /> : n}
+    </span>
+  );
+}
+
+/** Esquinas fotográficas de álbum (triángulos de tinta) sobre las cuatro puntas del marco. */
+function EsquinasFoto() {
+  const comun = 'pointer-events-none absolute z-10 size-6 bg-tinta';
+  return (
+    <span aria-hidden>
+      <span className={`${comun} -top-1 -left-1 [clip-path:polygon(0_0,100%_0,0_100%)]`} />
+      <span className={`${comun} -top-1 -right-1 [clip-path:polygon(0_0,100%_0,100%_100%)]`} />
+      <span className={`${comun} -bottom-1 -left-1 [clip-path:polygon(0_0,0_100%,100%_100%)]`} />
+      <span className={`${comun} -right-1 -bottom-1 [clip-path:polygon(100%_0,100%_100%,0_100%)]`} />
     </span>
   );
 }

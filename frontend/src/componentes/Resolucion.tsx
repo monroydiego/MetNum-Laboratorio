@@ -38,6 +38,10 @@ export function Resolucion({ slug, resultado, entrada, matricula, nivel, onEvide
 
   return (
     <>
+      <header className="intertitulo rounded-sm">
+        <h3 className="m-0 text-h3">Resolución</h3>
+        <p className="m-0 mt-1 text-sm">Procedimiento completo en el formato del libro, con su tabla y su gráfica.</p>
+      </header>
       <VistaResultado resultado={resultado} />
       <PasosKatex pasos={resultado.pasos} />
       {resultado.matrices.length > 0 && (
@@ -60,8 +64,8 @@ export function Resolucion({ slug, resultado, entrada, matricula, nivel, onEvide
           alto={240}
         />
       )}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-linea bg-panel-2/60 p-4">
-        <p className="m-0 flex-1 text-sm text-tenue">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border-(length:--trazo-medio) border-dashed border-tinta bg-panel-2 p-4">
+        <p className="m-0 min-w-56 flex-1 text-sm text-tenue">
           Envía la foto de tu procedimiento hecho a mano para que tu docente lo compare con esta resolución.
         </p>
         <button type="button" className="btn" onClick={() => setComprobando(true)}>
@@ -88,23 +92,29 @@ export function VistaResultado({ resultado }: { resultado: ResultadoNumericoDTO 
   return (
     <section className="flex flex-col gap-3" aria-label="Resultado">
       {resultado.advertencias.map((a, i) => (
-        <p key={i} className="m-0 flex items-start gap-2 rounded-lg border border-ambar/50 bg-ambar/10 px-3 py-2 text-sm text-ambar">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden /> {a}
+        <p
+          key={i}
+          className="m-0 flex items-start gap-2 rounded-lg border-(length:--trazo-fino) border-tinta bg-ambar-2/25 px-3 py-2 text-sm text-ambar"
+        >
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-tinta" aria-hidden /> {a}
         </p>
       ))}
       {entradas.length > 0 && (
-        <dl className="m-0 grid gap-2 sm:grid-cols-2">
-          {entradas.map(([k, v]) => (
-            <div key={k} className="flex flex-col gap-1 rounded-lg border border-primario-2/60 bg-primario/5 px-4 py-3">
-              <dt className="text-sm text-tenue">
-                <NombreResultado clave={k} />
-              </dt>
-              <dd className="m-0 text-xl break-all text-primario">
-                <ValorCelda valor={v} />
-              </dd>
-            </div>
-          ))}
-        </dl>
+        // Cartela del resultado final: fotograma blanco con sombra dorada (es lo que hay que mirar).
+        <div className="rounded-xl border-(length:--trazo-medio) border-tinta bg-panel p-1.5 shadow-oro">
+          <dl className="m-0 grid gap-1.5 rounded-lg border-(length:--trazo-fino) border-tinta p-3 sm:grid-cols-2">
+            {entradas.map(([k, v]) => (
+              <div key={k} className="flex min-w-0 flex-col gap-1 rounded-md bg-panel-2 px-4 py-3">
+                <dt className="font-display text-sm text-tenue">
+                  <NombreResultado clave={k} />
+                </dt>
+                <dd className="m-0 text-h3 leading-tight break-all text-tinta">
+                  <ValorCelda valor={v} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       )}
     </section>
   );

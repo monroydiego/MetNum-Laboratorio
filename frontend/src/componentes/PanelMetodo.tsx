@@ -1,7 +1,7 @@
 // Panel de un método: formulario generado, resolución en el backend y resultados
 // (resultado, pasos KaTeX, matrices, tabla, gráfica, convergencia) + Modo Comprobación.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { AlertTriangle, BookOpen, Dices, Eraser, PlugZap, RefreshCw, Sigma } from 'lucide-react';
+import { AlertTriangle, BookOpen, Clapperboard, Dices, Eraser, PlugZap, RefreshCw, Sigma } from 'lucide-react';
 import { useCatalogo } from '../catalogo/contexto';
 import { calcular, ErrorApi, mensajeDeError, obtenerProblema } from '../services/apiClient';
 import type { EvidenciaDTO, MetodoInfoDTO, ResultadoNumericoDTO } from '../types/numericos';
@@ -53,7 +53,12 @@ export function PanelMetodo(props: Props) {
   const metodo = porSlug.get(props.slug);
 
   if (!metodo) {
-    if (estado === 'cargando') return <p className="text-tenue">Consultando el catálogo de métodos…</p>;
+    if (estado === 'cargando')
+      return (
+        <p className="flex items-center gap-2 text-tenue">
+          <Clapperboard size={18} className="animate-tambaleo" aria-hidden /> Consultando el catálogo de métodos…
+        </p>
+      );
     if (estado === 'error')
       return (
         <EstadoVacio icono={<PlugZap aria-hidden />} titulo="Sin conexión con el servidor de cálculo" texto={error ?? ''}>
@@ -81,12 +86,15 @@ export function PanelMetodo(props: Props) {
 
 function EstadoVacio({ icono, titulo, texto, children }: { icono: React.ReactNode; titulo: string; texto: string; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-3 py-6">
-      <p className="m-0 flex items-center gap-2 font-display text-xl text-ambar">
-        {icono} {titulo}
+    <div className="tarjeta flex max-w-2xl flex-col items-start gap-3 overflow-hidden">
+      <p className="intertitulo m-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg font-display text-xl text-papel">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full border-[length:var(--trazo-medio)] border-papel bg-ambar-2 text-tinta">
+          {icono}
+        </span>
+        {titulo}
       </p>
-      <p className="m-0 max-w-prose text-tenue">{texto}</p>
-      {children}
+      <p className="m-0 max-w-prose px-5 text-tenue">{texto}</p>
+      <div className="px-5 pb-5">{children}</div>
     </div>
   );
 }
@@ -171,21 +179,24 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       <form onSubmit={resolver} className="flex flex-col gap-4 lg:sticky lg:top-0 lg:self-start" noValidate>
-        <div className="flex flex-col gap-1">
-          <p className="m-0 flex items-center gap-2 text-sm text-tenue">
-            <BookOpen size={16} aria-hidden /> Unidad {ROMANOS[metodo.unidad] ?? metodo.unidad}
+        <div className="flex flex-col items-start gap-2">
+          <p className="chapa m-0 rounded-xl py-1 font-sans text-sm tracking-normal text-tinta">
+            <BookOpen size={15} aria-hidden /> Unidad {ROMANOS[metodo.unidad] ?? metodo.unidad}
             {metodo.capitulo ? `, ${metodo.capitulo}` : ''}, página {metodo.pagina} del libro
           </p>
           {modo === 'profesor' && <p className="m-0 text-sm text-ambar">Modo profesor: este cálculo no marca consolas del juego.</p>}
           {modo === 'consulta' && <p className="m-0 text-sm text-ambar">Panel de consulta: tabla de referencia, no es un problema.</p>}
         </div>
-        {campos.length ? (
-          <FormularioMetodo campos={campos} valores={valores} errores={errores} onCambio={cambiar} deshabilitado={cargando || generando} />
-        ) : (
-          <p className="m-0 text-tenue">Este método no necesita datos de entrada.</p>
-        )}
+        <div className={`transition-opacity ${generando ? 'opacity-70' : ''}`} aria-busy={generando || cargando}>
+          {campos.length ? (
+            <FormularioMetodo campos={campos} valores={valores} errores={errores} onCambio={cambiar} deshabilitado={cargando || generando} />
+          ) : (
+            <p className="m-0 text-tenue">Este método no necesita datos de entrada.</p>
+          )}
+        </div>
         {errorGeneral && (
-          <p role="alert" className="m-0 rounded-lg border border-hostil/60 bg-hostil/10 px-3 py-2 text-sm text-hostil">
+          <p role="alert" className="m-0 flex animate-sacudida items-start gap-2 rounded-xl border-[length:var(--trazo-fino)] border-hostil bg-papel px-3 py-2 text-sm text-hostil">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
             {errorGeneral}
           </p>
         )}
@@ -220,10 +231,15 @@ function PanelConMetodo({ metodo, modo, matricula, nivel, onResuelto, onEvidenci
 
       <div ref={resultadosRef} className="flex min-w-0 scroll-mt-4 flex-col gap-6" aria-live="polite">
         {!resultado ? (
-          <div className="rounded-xl border border-dashed border-linea p-6 text-tenue">
-            {tieneEjemplo
-              ? 'Resuelve el problema planteado (o pide uno nuevo, o carga el ejemplo del libro) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'
-              : 'Resuelve el problema planteado (o pide uno nuevo) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'}
+          <div className="semitono flex flex-col items-start gap-3 rounded-xl border-[length:var(--trazo-fino)] border-dashed border-tinta/40 p-6">
+            <span className="grid size-12 place-items-center rounded-full border-[length:var(--trazo-medio)] border-tinta bg-papel shadow-tinta-sm" aria-hidden>
+              <Sigma size={22} />
+            </span>
+            <p className="m-0 max-w-prose rounded-md bg-panel px-2 py-1 text-tenue">
+              {tieneEjemplo
+                ? 'Resuelve el problema planteado (o pide uno nuevo, o carga el ejemplo del libro) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'
+                : 'Resuelve el problema planteado (o pide uno nuevo) y pulsa «Resolver». Aquí aparecerán el procedimiento, la tabla y la gráfica.'}
+            </p>
           </div>
         ) : (
           <>

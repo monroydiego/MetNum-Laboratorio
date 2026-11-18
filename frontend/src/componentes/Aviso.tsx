@@ -5,13 +5,14 @@ interface Props {
   onFin: () => void;
 }
 
+/** Cartela por tono: tinta (info), el verde que regresa (éxito) y el rojo de OMEGA (peligro). */
 const TONOS = {
-  info: 'border-primario-2 text-tinta',
-  exito: 'border-menta text-menta',
-  peligro: 'border-hostil text-hostil',
+  info: 'bg-tinta',
+  exito: 'bg-menta',
+  peligro: 'bg-hostil animate-sacudida',
 } as const;
 
-/** Aviso flotante breve (aria-live) para mensajes del juego. */
+/** Aviso flotante breve (aria-live) para mensajes del juego, como intertítulo de cine mudo. */
 export function Aviso({ mensaje, onFin }: Props) {
   useEffect(() => {
     if (!mensaje) return;
@@ -20,11 +21,13 @@ export function Aviso({ mensaje, onFin }: Props) {
   }, [mensaje, onFin]);
 
   return (
-    <div aria-live="polite" role="status" className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <div aria-live="polite" role="status" className="pointer-events-none fixed inset-x-0 top-20 z-50 flex justify-center px-4">
       {mensaje && (
-        <p key={mensaje.id} className={`m-0 max-w-xl rounded-lg border bg-panel/95 px-4 py-2.5 text-sm shadow-lg shadow-[#22302d]/15 animate-aparecer ${TONOS[mensaje.tono]}`}>
-          {mensaje.texto}
-        </p>
+        <div key={mensaje.id} className="animate-aparecer">
+          <p className={`intertitulo m-0 max-w-xl rounded-md px-5 py-3 text-center font-display text-sm tracking-wide text-papel shadow-tinta ${TONOS[mensaje.tono]}`}>
+            {mensaje.texto}
+          </p>
+        </div>
       )}
     </div>
   );

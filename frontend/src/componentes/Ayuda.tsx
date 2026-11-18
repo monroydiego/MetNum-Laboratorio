@@ -14,7 +14,7 @@ export function Ayuda({ onCerrar }: { onCerrar: () => void }) {
   return (
     <Dialogo titulo="Cómo jugar" onCerrar={onCerrar} ancho="md">
       <div className="flex flex-col gap-4">
-        <p className="m-0 text-tenue">
+        <p className="m-0 rounded-lg border-[length:var(--trazo-fino)] border-tinta bg-panel-2 px-4 py-3 text-tenue">
           Tienes <strong className="text-tinta">5 vidas de 100 puntos</strong>. Los centinelas quitan 12 puntos al tocarte, los rayos de OMEGA 17 y cada
           respuesta incorrecta 5. Al llegar a 0 pierdes una vida y reapareces en la entrada. Si pierdes las 5 vidas, la sala se reinicia: sus problemas
           cambian y vuelven a quedar sin resolver. Cada problema resuelto recarga 7 puntos.
@@ -24,10 +24,11 @@ export function Ayuda({ onCerrar }: { onCerrar: () => void }) {
           (obligatoria, la revisa tu docente) y escribe tu resultado: cuenta como correcto solo si coincide desde la parte entera hasta el 3.er decimal. Al
           acertar se muestra la resolución completa. Todos los problemas de una sala son obligatorios para pasar a la siguiente.
         </p>
+        <h3 className="m-0 text-xl">Teclas</h3>
         <table className="w-full border-collapse text-sm">
           <tbody>
             {filas.map(([k, v]) => (
-              <tr key={k} className="border-b border-linea/60">
+              <tr key={k} className="border-b-[length:var(--trazo-fino)] border-dashed border-linea last:border-b-0">
                 <th scope="row" className="py-2 pr-4 text-left align-top font-normal whitespace-nowrap">
                   <kbd className="kbd">{k}</kbd>
                 </th>

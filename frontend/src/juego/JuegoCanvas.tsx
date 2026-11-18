@@ -254,14 +254,14 @@ export function JuegoCanvas(props: Props) {
   }
 
   const claseTactil =
-    'grid size-12 place-items-center rounded-lg border border-linea bg-panel-2 text-tinta active:bg-primario-2 touch-none select-none';
+    'grid size-12 place-items-center rounded-lg border-2 border-tinta bg-panel text-tinta shadow-tinta-sm active:translate-x-0.5 active:translate-y-0.5 active:bg-primario-2 active:shadow-none touch-none select-none';
 
   return (
     <div className="flex flex-col gap-3">
       <canvas
         ref={canvasRef}
         onClick={alHacerClic}
-        className="block aspect-[1080/590] w-full cursor-crosshair rounded-xl border border-linea bg-fondo"
+        className="block aspect-[1080/590] w-full cursor-crosshair rounded-xl border-2 border-tinta bg-fondo shadow-tinta"
         role="img"
         aria-label={`Sala ${props.sala.nombre}. Usa WASD o flechas para moverte, E para activar consolas y F para cruzar la puerta.`}
       />

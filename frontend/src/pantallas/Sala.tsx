@@ -1,6 +1,6 @@
 // Pantalla de sala: encabezado + barra de estado + canvas del juego + bitácora de problemas.
-import { useCallback, useEffect, useMemo, useState, type Dispatch } from 'react';
-import { CheckCircle2, Circle, Shield } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
+import { CheckCircle2, Circle, Clock, Shield } from 'lucide-react';
 import { JuegoCanvas, type Indicacion } from '../juego/JuegoCanvas';
 import { SALAS, indiceSala, nombreRespaldo, ROMANOS, type Consola, type Sala as SalaDef } from '../juego/mapa';
 import {
@@ -9,6 +9,8 @@ import {
   progresoSala,
   requeridasResueltas,
   salaCompleta,
+  restanteTerminal,
+  VIDA_POR_TERMINAL_VENCIDA,
   TOTAL_REQUERIDAS,
   VIDA_POR_RESPUESTA_INCORRECTA,
   VIDAS_MAX,
@@ -17,9 +19,9 @@ import {
 } from '../juego/estado';
 import { useCatalogo } from '../catalogo/contexto';
 import { sonar } from '../juego/sonido';
-import { color } from '../tokens';
+import { color, tintes } from '../tokens';
 import { Dialogo } from '../componentes/Dialogo';
-import { Hud } from '../componentes/Hud';
+import { CuentaTerminal, Hud } from '../componentes/Hud';
 import { PanelMetodo } from '../componentes/PanelMetodo';
 import type { TonoAviso } from '../App';
 
@@ -50,16 +52,48 @@ export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Pr
 
   const completa = salaCompleta(estado, sala);
   const escudos = escudosCaidos(estado, sala);
+  const contrarreloj = estado.modo === 'contrarreloj';
   const pausado = pausaExterna || consolaAbierta !== null || historiaPendiente;
+  // Contrarreloj: el récord es el tiempo TOTAL, así que el reloj sigue corriendo dentro de las terminales.
+  const relojPausado = pausaExterna || historiaPendiente || (consolaAbierta !== null && !contrarreloj);
 
   // Cronómetro de la misión (solo mientras se juega y la pestaña está visible).
   useEffect(() => {
-    if (pausado || estado.victoria) return;
+    if (relojPausado || estado.victoria) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === 'visible') despachar({ tipo: 'tiempo', ms: 1000 });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [pausado, estado.victoria, despachar]);
+  }, [relojPausado, estado.victoria, despachar]);
+
+  // Contrarreloj: si vence el tiempo de una terminal sin resolver, se restan 35 de vida y su contador se restablece.
+  const vigente = useRef({ estado, alVencida: (_slug: string) => {} });
+  useEffect(() => {
+    vigente.current = { estado, alVencida };
+  });
+  useEffect(() => {
+    if (!contrarreloj) return;
+    const id = window.setInterval(() => {
+      const { estado: e, alVencida: vencer } = vigente.current;
+      const ahora = Date.now();
+      const vencida = sala.consolas.find((c) => restanteTerminal(e, c.slug, ahora) === 0);
+      if (vencida) vencer(vencida.slug);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [contrarreloj, sala]);
+
+  function alVencida(slug: string) {
+    avisarDano(VIDA_POR_TERMINAL_VENCIDA, `Se acabó el tiempo de «${nombre(slug)}»`);
+    if (consolaAbierta !== null && sala.consolas[consolaAbierta]?.slug === slug) setConsolaAbierta(null);
+    despachar({ tipo: 'terminalVencida', slug });
+    sonar('dano');
+  }
+
+  /** E sobre una terminal: se abre y, en Contrarreloj, arranca su contador de 30 minutos. */
+  function abrirConsola(i: number) {
+    setConsolaAbierta(i);
+    despachar({ tipo: 'iniciarTerminal', slug: sala.consolas[i].slug, ahora: Date.now() });
+  }
 
   function alPuerta() {
     if (!completa) {
@@ -88,6 +122,10 @@ export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Pr
 
   /** Aviso común de daño (golpe o respuesta incorrecta) según lo que provoca en las vidas. */
   function avisarDano(cantidad: number, motivo: string) {
+    if (estado.modo === 'practica') {
+      avisar(`${motivo}: en práctica no pierdes vida.`, 'info');
+      return;
+    }
     const consecuencia = consecuenciaDano(estado, cantidad);
     if (consecuencia === 'salaReiniciada') {
       setConsolaAbierta(null);
@@ -131,28 +169,36 @@ export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Pr
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Encabezado de la sala: dónde estoy y a dónde puedo ir. */}
-      <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
-        <div className="min-w-0 flex-1">
-          <p className="m-0 text-sm font-semibold tracking-wide text-tenue uppercase">
-            Sector {ROMANOS[sala.sector]} · Unidad {ROMANOS[sala.sector]} · Sala {indiceSala(sala.id) + 1} de {SALAS.length}
+      {/* Encabezado de la sala como intertítulo de cine mudo. El sello se colorea con el tinte de la sala al recuperarla. */}
+      <header className="intertitulo flex flex-wrap items-center gap-x-5 gap-y-3 rounded-md px-5 py-4 shadow-tinta sm:px-6">
+        <span
+          aria-hidden
+          className={`grid size-14 shrink-0 place-items-center rounded-full border-[length:var(--trazo-medio)] border-papel font-display text-h3 text-tinta shadow-oro-md max-sm:size-11 max-sm:text-xl ${
+            completa ? 'animate-colorear' : 'bg-papel'
+          }`}
+          style={completa ? { backgroundColor: tintes[sala.id] } : undefined}
+        >
+          {indiceSala(sala.id) + 1}
+        </span>
+        <div className="min-w-48 flex-1">
+          <p className="m-0 text-sm">
+            Sala {indiceSala(sala.id) + 1} de {SALAS.length}, Sector {ROMANOS[sala.sector]}, Unidad {ROMANOS[sala.sector]}
           </p>
-          <h1 className="m-0 text-h2">{sala.nombre}</h1>
-          <p className="m-0 max-w-3xl text-tenue">{sala.descripcion}</p>
+          <h1 className="m-0 text-h3 sm:text-h2">{sala.nombre}</h1>
+          <p className="m-0 max-w-3xl">{sala.descripcion}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-panel px-3 py-1.5 text-sm shadow-sm">
-            <span className="numero font-semibold">
-              {hechas}/{total}
-            </span>{' '}
-            problemas
-          </span>
-        </div>
+        <span className="chapa relative z-10 px-3 py-1 text-sm text-tinta">
+          <span className="numero font-semibold text-tinta">
+            {hechas}/{total}
+          </span>{' '}
+          <span className="font-sans text-tinta">problemas</span>
+        </span>
       </header>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
         <section aria-label={`Sala ${sala.nombre}`} className="flex min-w-0 flex-col gap-3">
-          <Hud energia={estado.energia} vidas={estado.vidas} tiempoMs={estado.tiempoMs} omegaVida={sala.esJefe ? estado.omegaVida : null} />
+          <Hud energia={estado.energia} vidas={estado.vidas} tiempoMs={estado.tiempoMs}
+            terminales={contrarreloj ? sala.consolas.filter((c) => c.slug in estado.terminales).map((c) => ({ nombre: nombre(c.slug), slug: c.slug, inicio: estado.terminales[c.slug] })) : undefined} omegaVida={sala.esJefe ? estado.omegaVida : null} />
           <JuegoCanvas
             key={`${sala.id}-${estado.salasReiniciadas}`}
             sala={sala}
@@ -166,7 +212,7 @@ export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Pr
             nombreJugador={estado.matricula || 'Agente'}
             acento={ACENTOS[sala.sector]}
             pausado={pausado}
-            onConsola={setConsolaAbierta}
+            onConsola={abrirConsola}
             onPuerta={alPuerta}
             onDano={alDano}
             onImpacto={alImpacto}
@@ -216,7 +262,11 @@ export function Sala({ estado, despachar, pausaExterna, onVictoria, avisar }: Pr
         <Dialogo
           titulo={nombre(consola.slug)}
           subtitulo={
-            consola.tipo === 'escudo'
+            contrarreloj && consola.slug in estado.terminales ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Clock size={14} aria-hidden /> Tiempo de la terminal: <CuentaTerminal inicio={estado.terminales[consola.slug]} />. Si se acaba, pierdes {VIDA_POR_TERMINAL_VENCIDA} de vida.
+              </span>
+            ) : consola.tipo === 'escudo'
               ? 'Escudo de OMEGA: resuelve el problema a mano, sube la foto de tu procedimiento y escribe tu resultado.'
               : `${sala.nombre}: resuelve el problema a mano, sube la foto de tu procedimiento y escribe tu resultado.`
           }
@@ -267,7 +317,7 @@ function Bitacora({
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between">
           <h2 className="m-0 text-xl">{sala.esJefe ? 'Escudos de OMEGA' : 'Problemas de la sala'}</h2>
-          <span className="numero text-sm">
+          <span className="chapa numero">
             {hechas}/{total}
           </span>
         </div>
@@ -278,9 +328,9 @@ function Bitacora({
             return (
               <li
                 key={c.slug}
-                className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm ${
-                  hecha ? 'border-menta/40 bg-menta/8 text-menta' : 'border-linea bg-panel-2'
-                } ${disponibles[i] ? '' : 'opacity-60'}`}
+                className={`flex items-center gap-2.5 rounded-xl border-[length:var(--trazo-fino)] px-3 py-2 text-sm ${
+                  hecha ? 'border-menta bg-menta-2 font-semibold text-menta' : 'border-tinta bg-panel'
+                } ${disponibles[i] ? '' : 'semitono border-dashed opacity-70'}`}
               >
                 {hecha ? (
                   <CheckCircle2 size={16} aria-label="Resuelto" />
@@ -297,15 +347,15 @@ function Bitacora({
         </ul>
       </div>
 
-      <div className="mt-auto flex flex-col gap-2 border-t border-linea pt-4">
+      <div className="mt-auto flex flex-col gap-2 border-t-[length:var(--trazo-fino)] border-dashed border-tinta pt-4">
         <div className="flex items-baseline justify-between">
           <h3 className="m-0 text-base">Progreso de la misión</h3>
           <span className="numero text-sm">
             {global}/{TOTAL_REQUERIDAS}
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-linea" role="progressbar" aria-label="Problemas resueltos en toda la misión" aria-valuemin={0} aria-valuemax={TOTAL_REQUERIDAS} aria-valuenow={global}>
-          <div className="h-full rounded-full bg-primario" style={{ width: `${(global / TOTAL_REQUERIDAS) * 100}%` }} />
+        <div className="medidor" role="progressbar" aria-label="Problemas resueltos en toda la misión" aria-valuemin={0} aria-valuemax={TOTAL_REQUERIDAS} aria-valuenow={global}>
+          <div className="medidor-relleno text-tinta" style={{ width: `${(global / TOTAL_REQUERIDAS) * 100}%` }} />
         </div>
         <p className="m-0 text-sm text-tenue">
           Puntos: <span className="numero text-tinta">{estado.puntos}</span>
