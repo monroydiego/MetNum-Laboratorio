@@ -28,6 +28,7 @@ interface FichaModo {
 }
 
 const MINUTOS = LIMITE_TERMINAL_MS / 60000;
+const MENSAJE_MATRICULA_VACIA = 'Por favor, ingrese los 7 dígitos de su matrícula.';
 
 const MODOS_FICHA: FichaModo[] = [
   {
@@ -69,8 +70,8 @@ export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDo
 
   function nueva(e: FormEvent) {
     e.preventDefault();
-    if (matricula && !esMatriculaValida(matricula)) {
-      setAvisoMatricula(MENSAJE_MATRICULA);
+    if (!esMatriculaValida(matricula)) {
+      setAvisoMatricula(matricula ? MENSAJE_MATRICULA : MENSAJE_MATRICULA_VACIA);
       return;
     }
     if (hayPartida && !confirmar) {
@@ -186,8 +187,7 @@ export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDo
                 aria-describedby={`${id}-ayuda ${id}-aviso`}
               />
               <p id={`${id}-ayuda`} className="m-0 text-sm text-tenue">
-                Firma las fotos de tus procedimientos que revisa tu docente. Si la dejas vacía, se te pedirá al verificar tu primera respuesta.
-              </p>
+                Por favor, ingresa los 7 dígitos de tu matrícula (sin usar letras ni símbolos).              </p>
               {avisoMatricula && (
                 <p id={`${id}-aviso`} role="alert" className="m-0 text-sm font-bold text-hostil">
                   {avisoMatricula}

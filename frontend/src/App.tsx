@@ -8,6 +8,7 @@ import { Aviso } from './componentes/Aviso';
 import { MatrazMascota } from './componentes/MatrazMascota';
 import { AccesoDocente } from './componentes/AccesoDocente';
 import { Ayuda } from './componentes/Ayuda';
+import { AjusteLetra } from './componentes/AjusteLetra';
 import { cerrarSesionDocente, sesionDocente } from './services/apiClient';
 import { ModoProfesor } from './componentes/ModoProfesor';
 import { PanelDocente } from './componentes/PanelDocente';
@@ -149,6 +150,8 @@ function Juego() {
           onProfesor={() => abrirHerramienta('profesor')}
           onDocente={() => abrirHerramienta('docente')}
         />
+        {/* La portada no tiene cabecera: la tuerca va fija en la esquina superior derecha. */}
+        <AjusteLetra tono="oscuro" className="fixed top-3 right-3 z-30" />
         {modales}
       </>
     );
@@ -219,6 +222,7 @@ function Juego() {
               {sonido ? <Volume2 size={18} aria-hidden /> : <VolumeX size={18} aria-hidden />}
               <span className="sr-only">Sonido</span>
             </button>
+            <AjusteLetra />
           </div>
         </div>
         <div className="tira-pelicula h-3.5 rounded-none border-t border-papel/25" aria-hidden />

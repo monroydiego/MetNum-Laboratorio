@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { AjusteLetra } from './AjusteLetra';
 
 interface Props {
   titulo: string;
@@ -55,17 +56,20 @@ export function Dialogo({ titulo, subtitulo, onCerrar, ancho = 'md', completo = 
           </h2>
           {subtitulo && <div className="mt-1 text-sm text-primario-2">{subtitulo}</div>}
         </div>
-        {onCerrar && (
-          <button
-            type="button"
-            className="relative z-10 -mt-1 -mr-2 inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-[length:var(--trazo-fino)] border-papel bg-transparent text-papel transition-colors hover:bg-papel hover:text-tinta"
-            onClick={onCerrar}
-            aria-label="Cerrar (Esc)"
-            title="Cerrar (Esc)"
-          >
-            <X size={20} aria-hidden />
-          </button>
-        )}
+        <div className="relative z-10 -mt-1 -mr-2 flex shrink-0 items-center gap-2">
+          <AjusteLetra />
+          {onCerrar && (
+            <button
+              type="button"
+              className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-[length:var(--trazo-fino)] border-papel bg-transparent text-papel transition-colors hover:bg-papel hover:text-tinta"
+              onClick={onCerrar}
+              aria-label="Cerrar (Esc)"
+              title="Cerrar (Esc)"
+            >
+              <X size={20} aria-hidden />
+            </button>
+          )}
+        </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
     </dialog>
