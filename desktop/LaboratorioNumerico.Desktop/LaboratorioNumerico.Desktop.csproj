@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Host de escritorio de «Escape del Laboratorio Numérico II — Edición DELUXE».
+    WinForms + WebView2: abre el juego (frontend/dist) servido por el motor FastAPI empaquetado
+    con PyInstaller (desktop/motor). El motor viaja DENTRO del .exe como recurso (motor.zip) y se
+    extrae la primera vez en %LOCALAPPDATA%\LaboratorioNumerico\motor.
+
+    Publicar (lo hace desktop/build.ps1):
+      dotnet publish desktop/LaboratorioNumerico.Desktop -c Release
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks> <!-- LibraryImport (Job Object) -->
+    <RootNamespace>LaboratorioNumerico.Desktop</RootNamespace>
+    <AssemblyName>LaboratorioNumerico</AssemblyName>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon Condition="Exists('icono.ico')">icono.ico</ApplicationIcon>
+
+    <Product>Escape del Laboratorio Numérico II — Edición DELUXE</Product>
+    <Description>Videojuego educativo de Métodos Numéricos</Description>
+    <Version>1.0.0</Version>
+
+    <!-- Permite compilar/publicar el host también desde Linux o macOS. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <!-- Un solo .exe nativo, autocontenido (no requiere instalar .NET en la máquina). -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Artefactos que genera desktop/build.ps1 antes del publish. -->
+    <MotorZip>$(MSBuildThisFileDirectory)..\artifacts\motor.zip</MotorZip>
+    <MotorVersion>$(MSBuildThisFileDirectory)..\artifacts\motor.version</MotorVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
+  </ItemGroup>
+
+  <!-- Si existe el motor empaquetado, se incrusta en el .exe. Sin él, el host busca motor\ junto al .exe. -->
+  <ItemGroup Condition="Exists('$(MotorZip)') And Exists('$(MotorVersion)')">
+    <EmbeddedResource Include="$(MotorZip)" LogicalName="motor.zip" />
+    <EmbeddedResource Include="$(MotorVersion)" LogicalName="motor.version" />
+  </ItemGroup>
+
+</Project>

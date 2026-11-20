@@ -17,3 +17,10 @@ backend/uploads/
 .DS_Store
 .vscode/
 .idea/
+
+# Escritorio (.NET 10 + WebView2)
+desktop/**/bin/
+desktop/**/obj/
+desktop/artifacts/
+desktop/dist/
+desktop/.venv-build/

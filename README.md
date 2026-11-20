@@ -1,9 +1,8 @@
 ## Laboratorio
-## Emmanuel Carrillo Loera 2067988
 
 # Escape del Laboratorio Numérico II — Edición DELUXE
 
-Videojuego educativo de Métodos Numéricos. La IA OMEGA tomó el laboratorio: recupera los cuatro sectores resolviendo, en cada consola, un método del *Libro de Métodos Numéricos* con su formato de resolución, tabla, gráfica y procedimiento. Incluye modo profesor y Modo Comprobación Docente (foto del procedimiento + captura de la gráfica, consultables en el Panel Docente).
+Videojuego educativo de Métodos Numéricos. La IA OMEGA tomó el laboratorio: recupera los cuatro sectores resolviendo, en cada consola, un método del _Libro de Métodos Numéricos_ con su formato de resolución, tabla, gráfica y procedimiento. Incluye modo profesor y Modo Comprobación Docente (foto del procedimiento + captura de la gráfica, consultables en el Panel Docente).
 
 ## Arranque
 
@@ -18,12 +17,12 @@ python3 -m venv backend/.venv
 npm run dev        # juego en http://localhost:5173 + motor en http://localhost:8000
 ```
 
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Frontend y backend juntos |
-| `npm run dev:front` / `npm run dev:back` | Solo uno de los dos |
-| `npm run test:back` | Pruebas de los 36 métodos contra los ejemplos del libro (pytest + mpmath) |
-| `npm run build:front` | Typecheck y build del frontend |
+| Comando                                  | Qué hace                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`                            | Frontend y backend juntos                                                 |
+| `npm run dev:front` / `npm run dev:back` | Solo uno de los dos                                                       |
+| `npm run test:back`                      | Pruebas de los 36 métodos contra los ejemplos del libro (pytest + mpmath) |
+| `npm run build:front`                    | Typecheck y build del frontend                                            |
 
 ## Estructura
 
@@ -35,4 +34,4 @@ npm run dev        # juego en http://localhost:5173 + motor en http://localhost:
 - `src/codigo_fuente/context/`: libro e instrucciones del proyecto.
 - `src/codigo_fuente/capturas/`: capturas de la versión original.
 
-Más detalles en `LEEME_PRIMERO.txt` y `CLAUDE.md`.
+Más detalles en `LEEME_PRIMERO.txt`
