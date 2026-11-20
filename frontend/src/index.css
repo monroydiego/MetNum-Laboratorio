@@ -386,7 +386,7 @@
     background: var(--color-papel);
     box-shadow: 0 2px 0 0 var(--color-tinta);
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--color-tinta);
   }
@@ -450,7 +450,7 @@
     border-radius: 999px;
     background: var(--color-papel);
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
     letter-spacing: 0.04em;
   }
   /* Relleno de semitono (sombras, zonas bloqueadas, fondos de sección) */
@@ -521,7 +521,7 @@
     color: var(--color-papel);
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
     letter-spacing: 0.04em;
     padding: 0.45rem 0.7rem;
     text-align: left;

@@ -5,6 +5,7 @@ import { Check, ClipboardList, Clapperboard, Compass, FlaskConical, Lock, Play, 
 import { useCatalogo } from '../catalogo/contexto';
 import { LIMITE_TERMINAL_MS, requeridasResueltas, VIDA_POR_TERMINAL_VENCIDA, TOTAL_REQUERIDAS, VIDAS_MAX, type EstadoJuego, type ModoJuego } from '../juego/estado';
 import { SALAS } from '../juego/mapa';
+import { esMatriculaValida, limpiarMatricula, MATRICULA_DIGITOS, MENSAJE_MATRICULA } from '../juego/matricula';
 import { MatrazMascota } from '../componentes/MatrazMascota';
 
 interface Props {
@@ -58,6 +59,7 @@ const MODOS_FICHA: FichaModo[] = [
 export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDocente }: Props) {
   const id = useId();
   const [matricula, setMatricula] = useState(estado.matricula);
+  const [avisoMatricula, setAvisoMatricula] = useState('');
   const [modo, setModo] = useState<ModoJuego>(estado.enCurso ? estado.modo : 'campana');
   const [confirmar, setConfirmar] = useState(false);
   const catalogo = useCatalogo();
@@ -67,6 +69,10 @@ export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDo
 
   function nueva(e: FormEvent) {
     e.preventDefault();
+    if (matricula && !esMatriculaValida(matricula)) {
+      setAvisoMatricula(MENSAJE_MATRICULA);
+      return;
+    }
     if (hayPartida && !confirmar) {
       setConfirmar(true);
       return;
@@ -167,15 +173,26 @@ export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDo
                 id={`${id}-mat`}
                 className="campo numero max-w-xs"
                 value={matricula}
-                maxLength={20}
+                maxLength={MATRICULA_DIGITOS}
                 inputMode="numeric"
+                pattern="[0-9]{7}"
                 autoComplete="off"
-                onChange={(e) => setMatricula(e.target.value)}
-                aria-describedby={`${id}-ayuda`}
+                aria-invalid={avisoMatricula ? true : undefined}
+                onChange={(e) => {
+                  const limpia = limpiarMatricula(e.target.value);
+                  setMatricula(limpia);
+                  setAvisoMatricula(limpia === e.target.value ? '' : MENSAJE_MATRICULA);
+                }}
+                aria-describedby={`${id}-ayuda ${id}-aviso`}
               />
               <p id={`${id}-ayuda`} className="m-0 text-sm text-tenue">
                 Firma las fotos de tus procedimientos que revisa tu docente. Si la dejas vacía, se te pedirá al verificar tu primera respuesta.
               </p>
+              {avisoMatricula && (
+                <p id={`${id}-aviso`} role="alert" className="m-0 text-sm font-bold text-hostil">
+                  {avisoMatricula}
+                </p>
+              )}
             </div>
             {confirmar && (
               <p role="alert" className="m-0 animate-sacudida rounded-lg border-[length:var(--trazo-medio)] border-tinta bg-ambar-2 px-3 py-2 text-sm text-tinta shadow-tinta-sm">

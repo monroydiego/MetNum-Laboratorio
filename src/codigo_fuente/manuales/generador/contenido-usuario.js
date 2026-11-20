@@ -329,4 +329,5 @@ module.exports = (c, img, dg) => [
     'ISO/IEC/IEEE 26514:2022, *Systems and software engineering. Design and development of information for users*. Criterio de estructura de este manual (información conceptual, instruccional, de referencia y de solución de problemas).',
     'Manual Técnico de *Escape del Laboratorio Numérico II, Edición DELUXE*, Equipo 5.',
   ]),
+  ...require('./conclusiones')(c),
 ];

@@ -117,10 +117,10 @@ export function MapaSector({ estado, onEntrar }: Props) {
               return (
                 <g key={s.numero}>
                   <rect x={z.x} y={z.y} width={z.w} height={z.h} rx="10" fill="none" stroke={color.tinta} strokeOpacity="0.45" strokeWidth={trazo.fino} strokeDasharray="7 6" />
-                  <text x={z.x + 10} y={z.y - 8} fill={color.tinta} fontFamily={fuente.display} fontSize="14">
+                  <text x={z.x + 10} y={z.y - 8} fill={color.tinta} fontFamily={fuente.display} fontSize="15">
                     {s.nombre}
                   </text>
-                  <text x={z.x + z.w - 10} y={z.y - 8} textAnchor="end" fill={color.tenue} fontFamily={fuente.sans} fontSize="12">
+                  <text x={z.x + z.w - 10} y={z.y - 8} textAnchor="end" fill={color.tenue} fontFamily={fuente.sans} fontSize="13">
                     {s.unidad}
                   </text>
                 </g>
@@ -152,10 +152,10 @@ export function MapaSector({ estado, onEntrar }: Props) {
             <g>
               <rect x={ESCLUSA.x + sombra.dx} y={ESCLUSA.y + sombra.dy} width={ESCLUSA.w} height={ESCLUSA.h} rx="10" fill={color.tinta} />
               <rect x={ESCLUSA.x} y={ESCLUSA.y} width={ESCLUSA.w} height={ESCLUSA.h} rx="10" fill={color.papel} stroke={color.tinta} strokeWidth={trazo.medio} />
-              <text x={ESCLUSA.x + ESCLUSA.w / 2} y={ESCLUSA.y + 35} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="15">
+              <text x={ESCLUSA.x + ESCLUSA.w / 2} y={ESCLUSA.y + 35} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="16">
                 Esclusa de entrada
               </text>
-              <text x={ESCLUSA.x + ESCLUSA.w / 2} y={ESCLUSA.y + 56} textAnchor="middle" fill={color.tenue} fontFamily={fuente.sans} fontSize="12">
+              <text x={ESCLUSA.x + ESCLUSA.w / 2} y={ESCLUSA.y + 56} textAnchor="middle" fill={color.tenue} fontFamily={fuente.sans} fontSize="13">
                 Punto de control del traje
               </text>
             </g>
@@ -213,10 +213,10 @@ export function MapaSector({ estado, onEntrar }: Props) {
 
                   {/* Rótulo blanco: el texto nunca va directamente sobre el tinte */}
                   <rect x={c.x + 9} y={c.y + 10} width={c.w - 18} height="50" rx="6" fill={color.papel} stroke={color.tinta} strokeWidth={abierta ? trazo.fino : 1} strokeOpacity={abierta ? 1 : 0.55} />
-                  <text x={c.x + 18} y={c.y + 31} fill={abierta ? color.tinta : color.tenue} fontFamily={fuente.display} fontSize="13" letterSpacing="0.01em">
+                  <text x={c.x + 18} y={c.y + 31} fill={abierta ? color.tinta : color.tenue} fontFamily={fuente.display} fontSize="14" letterSpacing="0.01em">
                     {s.nombre}
                   </text>
-                  <text x={c.x + 18} y={c.y + 50} fill={hecha ? color.menta : color.tenue} fontFamily={fuente.sans} fontWeight={hecha ? 700 : 400} fontSize="13">
+                  <text x={c.x + 18} y={c.y + 50} fill={hecha ? color.menta : color.tenue} fontFamily={fuente.sans} fontWeight={hecha ? 700 : 400} fontSize="14">
                     {hecha ? 'Recuperada' : abierta ? `${hechas} de ${t} problemas` : 'Bloqueada'}
                   </text>
                   {/* Insignia en la esquina (fuera del rótulo): candado o visto bueno */}
@@ -256,7 +256,7 @@ export function MapaSector({ estado, onEntrar }: Props) {
                     <g transform={`rotate(-4 ${c.x + c.w - 52} ${c.y + c.h - 4})`}>
                       <rect x={c.x + c.w - 104 + 2} y={c.y + c.h - 20 + 2} width="100" height="26" rx="7" fill={color.tinta} />
                       <rect x={c.x + c.w - 104} y={c.y + c.h - 20} width="100" height="26" rx="7" fill={color.ambar2} stroke={color.tinta} strokeWidth={trazo.medio} />
-                      <text x={c.x + c.w - 54} y={c.y + c.h - 2.5} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="12">
+                      <text x={c.x + c.w - 54} y={c.y + c.h - 2.5} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="13">
                         Estás aquí
                       </text>
                     </g>
@@ -327,23 +327,23 @@ export function MapaSector({ estado, onEntrar }: Props) {
                   ) : (
                     <path d={`M${cx - 18} ${cy - 32}Q${cx} ${cy - 20} ${cx + 18} ${cy - 32}`} fill="none" stroke={color.tinta} strokeWidth={trazo.grueso} strokeLinecap="round" />
                   )}
-                  <text x={cx} y={cy + 2} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="13">
+                  <text x={cx} y={cy + 2} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="14">
                     {s.nombre.split(' ')[0]}
                   </text>
-                  <text x={cx} y={cy + 18} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="13">
+                  <text x={cx} y={cy + 18} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="14">
                     {s.nombre.split(' ').slice(1).join(' ')}
                   </text>
-                  <text x={cx} y={cy + 35} textAnchor="middle" fill={color.tenue} fontFamily={fuente.sans} fontSize="12">
+                  <text x={cx} y={cy + 35} textAnchor="middle" fill={color.tenue} fontFamily={fuente.sans} fontSize="13">
                     {!omegaViva ? 'OMEGA desconectada' : abierta ? `Escudos ${t - hechas}/${t}` : 'Acceso bloqueado'}
                   </text>
-                  <text x={cx} y={cy - r - 14} textAnchor="middle" fill={omegaViva ? color.hostil : color.tinta} fontFamily={fuente.display} fontSize="16">
+                  <text x={cx} y={cy - r - 14} textAnchor="middle" fill={omegaViva ? color.hostil : color.tinta} fontFamily={fuente.display} fontSize="17">
                     {omegaViva ? 'Núcleo OMEGA' : 'Núcleo recuperado'}
                   </text>
                   {aqui && omegaViva && (
                     <g transform={`rotate(-4 ${cx} ${cy + r + 18})`}>
                       <rect x={cx - 50 + 2} y={cy + r + 6 + 2} width="100" height="26" rx="7" fill={color.tinta} />
                       <rect x={cx - 50} y={cy + r + 6} width="100" height="26" rx="7" fill={color.ambar2} stroke={color.tinta} strokeWidth={trazo.medio} />
-                      <text x={cx} y={cy + r + 23.5} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="12">
+                      <text x={cx} y={cy + r + 23.5} textAnchor="middle" fill={color.tinta} fontFamily={fuente.display} fontSize="13">
                         Estás aquí
                       </text>
                     </g>
@@ -356,11 +356,11 @@ export function MapaSector({ estado, onEntrar }: Props) {
             <g>
               <rect x="30" y="514" width="300" height="30" rx="4" fill={color.tinta} />
               <rect x="34" y="518" width="292" height="22" rx="2" fill="none" stroke={color.papel} strokeWidth="1" />
-              <text x="180" y="534" textAnchor="middle" fill={color.papel} fontFamily={fuente.display} fontSize="12" letterSpacing="0.02em">
+              <text x="180" y="534" textAnchor="middle" fill={color.papel} fontFamily={fuente.display} fontSize="13" letterSpacing="0.02em">
                 Laboratorio de Métodos Numéricos
               </text>
             </g>
-            <g fontFamily={fuente.sans} fontSize="12" fill={color.tenue}>
+            <g fontFamily={fuente.sans} fontSize="13" fill={color.tenue}>
               <rect x="800" y="536" width="50" height="6" fill={color.tinta} />
               <rect x="850" y="536" width="50" height="6" fill={color.papel} stroke={color.tinta} strokeWidth="1" />
               <text x="910" y="543" fill={color.tinta}>

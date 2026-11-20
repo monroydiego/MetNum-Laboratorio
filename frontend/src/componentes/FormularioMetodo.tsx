@@ -181,7 +181,7 @@ function EditorLista({ id, valores, onCambio, etiqueta, disabled, ...aria }: Pro
       <ol className="m-0 flex list-none flex-wrap gap-x-3 gap-y-2 rounded-md bg-panel-2/60 p-2" style={HOJA}>
         {lista.map((v, i) => (
           <li key={i} className="flex items-center gap-1">
-            <span className="numero grid min-w-6 place-items-center rounded-full border-[length:var(--trazo-fino)] border-tinta bg-papel px-1 text-xs text-tinta" aria-hidden>
+            <span className="numero grid min-w-6 place-items-center rounded-full border-[length:var(--trazo-fino)] border-tinta bg-papel px-1 text-sm text-tinta" aria-hidden>
               {i}
             </span>
             <input

@@ -520,4 +520,5 @@ module.exports = (c, img, dg) => [
     'Documentación de FastAPI, Pydantic, SQLAlchemy, SymPy, mpmath, React, Vite y Tailwind CSS en las versiones indicadas en la sección 4.',
     'Manual de Usuario de *Escape del Laboratorio Numérico II, Edición DELUXE*, Equipo 5.',
   ]),
+  ...require('./conclusiones')(c),
 ];

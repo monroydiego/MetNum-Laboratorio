@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from app.domain.entities import EvidenciaPartida
 from app.domain.funciones import ErrorMetodo
+from app.domain.matricula import validar_matricula
 from app.domain.repositories import EvidenciaGuardada, IEvidenciaRepo, IFileStorage, ResumenMatricula
 
 TIPOS_IMAGEN = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
@@ -56,8 +57,7 @@ class GestionarEvidencia:
         foto_procedimiento: ImagenSubida,
         foto_canvas: ImagenSubida,
     ) -> EvidenciaGuardada:
-        if not matricula.strip():
-            raise ErrorMetodo("Escribe la matrícula del alumno.")
+        matricula = validar_matricula(matricula)
         ext_proc = _extension(foto_procedimiento, "Foto del procedimiento")
         ext_canvas = _extension(foto_canvas, "Captura de la gráfica")
 
@@ -95,9 +95,8 @@ class GestionarEvidencia:
         foto_procedimiento: ImagenSubida,
     ) -> EvidenciaGuardada:
         """Intento de respuesta del juego (correcto o no) con la foto OBLIGATORIA del procedimiento."""
-        if not matricula.strip():
-            raise ErrorMetodo("Escribe tu matrícula para registrar tu procedimiento.")
-        ext = _extension(foto_procedimiento, "Foto del procedimiento")
+        matricula = validar_matricula(matricula)
+        ext =_extension(foto_procedimiento, "Foto del procedimiento")
         ruta = self._almacen.guardar(foto_procedimiento.contenido, ext)
         try:
             return self._repo.guardar(

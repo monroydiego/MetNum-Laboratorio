@@ -398,7 +398,7 @@ function pintarFondo(c: Ctx, sala: Sala, acento: string) {
     c.font = `400 ${tam}px ${fuente.display}`;
   }
   const anchoTitulo = c.measureText(sala.nombre).width;
-  c.font = `700 12px ${fuente.sans}`;
+  c.font = `700 14px ${fuente.sans}`;
   const anchoCartel = Math.min(570, Math.max(anchoTitulo, c.measureText(sub).width) + 50);
   const cartel = rrP(16, 12, anchoCartel, 64, 8);
   sombraDura(c, cartel);
@@ -418,7 +418,7 @@ function pintarFondo(c: Ctx, sala: Sala, acento: string) {
     c.fill();
   }
   rotulo(c, sala.nombre, 46, 48, tam, color.tinta);
-  rotulo(c, sub, 47, 66, 12, color.tenue, 'left', null, fuente.sans, '700');
+  rotulo(c, sub, 47, 66, 14, color.tenue, 'left', null, fuente.sans, '700');
 
   // Estante con cristalería a tinta (líquidos en gris; uno con el tinte de la sala).
   const tinte = tinteSala(sala);

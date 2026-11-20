@@ -6,6 +6,7 @@ import { Dialogo } from './Dialogo';
 import { enviarEvidencia, mensajeDeError } from '../services/apiClient';
 import type { EvidenciaDTO, EvidenciaFormCampos, ResultadoNumericoDTO } from '../types/numericos';
 import { resumenEntrada } from '../utilidades/esquema';
+import { esMatriculaValida, limpiarMatricula, MATRICULA_DIGITOS, MENSAJE_MATRICULA } from '../juego/matricula';
 
 interface Props {
   resultado: ResultadoNumericoDTO;
@@ -82,11 +83,12 @@ export function ModalComprobacion({ resultado, entrada, matriculaInicial, nivelI
     setError(null);
     const m = matricula.trim();
     if (!m) return setError('Escribe tu matrícula para que el docente identifique la evidencia.');
+    if (!esMatriculaValida(m)) return setError(MENSAJE_MATRICULA);
     if (!/^\d+$/.test(nivel.trim())) return setError('El nivel debe ser un número entero (0 o mayor).');
     if (!foto) return setError('Falta la foto de tu procedimiento en papel. Tómala o elígela desde tu dispositivo.');
     if (!captura) return setError('No se pudo capturar la gráfica. Cierra esta ventana, vuelve a resolver y reintenta.');
     const campos: EvidenciaFormCampos = {
-      matricula: m.slice(0, 20),
+      matricula: m,
       nivel: nivel.trim(),
       metodo: recortar(resultado.nombre_libro || resultado.metodo, 60),
       funcion: recortar(funcion, 255),
@@ -138,10 +140,16 @@ export function ModalComprobacion({ resultado, entrada, matriculaInicial, nivelI
                 id={`${id}-mat`}
                 className="campo numero"
                 value={matricula}
-                maxLength={20}
+                maxLength={MATRICULA_DIGITOS}
                 autoComplete="off"
                 inputMode="numeric"
-                onChange={(e) => setMatricula(e.target.value)}
+                pattern="[0-9]{7}"
+                title={MENSAJE_MATRICULA}
+                onChange={(e) => {
+                  const limpia = limpiarMatricula(e.target.value);
+                  setMatricula(limpia);
+                  if (limpia !== e.target.value) setError(MENSAJE_MATRICULA);
+                }}
                 required
               />
             </div>

@@ -100,7 +100,7 @@ export function ModoProfesor({ matricula, onCerrar, onEvidencia }: Props) {
                                   aria-hidden
                                 />
                                 <span className="min-w-0 flex-1">{m.nombre_libro}</span>
-                                <span className="numero shrink-0 text-xs text-tenue group-aria-[current=true]:text-tinta">p. {m.pagina}</span>
+                                <span className="numero shrink-0 text-sm text-tenue group-aria-[current=true]:text-tinta">p. {m.pagina}</span>
                               </button>
                             </li>
                           ))}

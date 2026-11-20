@@ -10,6 +10,20 @@ UPLOADS_DIR = BACKEND_DIR / "uploads"
 DATA_DIR.mkdir(exist_ok=True)
 DATABASE_URL = f"sqlite:///{DATA_DIR / 'auditoria_docente.db'}"
 
+def _nombre_disparador(tabla: str, operacion: str) -> str:
+    return f"{tabla}_matricula_{operacion.lower()}"
+
+
+def _disparador_matricula(tabla: str, operacion: str) -> str:
+    """Disparador SQLite que rechaza matrículas que no sean exactamente 7 dígitos (regla de app/domain/matricula.py)."""
+    return (
+        f"CREATE TRIGGER {_nombre_disparador(tabla, operacion)} "
+        f"BEFORE {operacion} ON {tabla} "
+        "WHEN (length(NEW.matricula) <> 7) OR (NEW.matricula GLOB '*[^0-9]*') "
+        "BEGIN SELECT RAISE(ABORT, 'La matrícula debe tener exactamente 7 dígitos numéricos.'); END"
+    )
+
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -82,6 +96,13 @@ def preparar_bd() -> None:
                 )
             EvidenciaModel.__table__.drop(con)
     Base.metadata.create_all(bind=engine)
+    # Segunda barrera en SQLite: ninguna fila puede guardar una matrícula que no sean exactamente 7 dígitos.
+    # Se recrean siempre para que una regla anterior (p. ej. de 1 a 7 dígitos) no quede vigente.
+    with engine.begin() as con:
+        for tabla in (EvidenciaModel.__tablename__, RecordModel.__tablename__):
+            for operacion in ("INSERT", "UPDATE"):
+                con.execute(text(f"DROP TRIGGER IF EXISTS {_nombre_disparador(tabla, operacion)}"))
+                con.execute(text(_disparador_matricula(tabla, operacion)))
     if columnas and "correcta" not in columnas:
         # Esquema anterior sin la columna de los intentos de respuesta: se agrega sin perder datos.
         with engine.begin() as con:

@@ -124,7 +124,7 @@ function bolita(c: CanvasRenderingContext2D, x: number, y: number, r: number, re
 /** Número de iteración en una chapita blanca con contorno de tinta. */
 function etiquetaIteracion(c: CanvasRenderingContext2D, texto: string, x: number, y: number, limiteDer: number) {
   c.save();
-  c.font = `600 11px ${fuente.mono}`;
+  c.font = `600 12px ${fuente.mono}`;
   const w = c.measureText(texto).width + 10;
   const h = 16;
   const x0 = Math.min(x, limiteDer - w - 4);
@@ -229,7 +229,7 @@ function pintarFondo(c: CanvasRenderingContext2D, e: Escenario) {
 
   // Marcas sobre los ejes y números en mono.
   c.lineWidth = trazo.fino;
-  c.font = `11px ${fuente.mono}`;
+  c.font = `12px ${fuente.mono}`;
   c.fillStyle = color.tenue;
   c.textAlign = 'center';
   c.textBaseline = 'top';
@@ -258,7 +258,7 @@ function pintarFondo(c: CanvasRenderingContext2D, e: Escenario) {
   // Rótulos de los ejes.
   c.save();
   c.fillStyle = color.tinta;
-  c.font = `12px ${fuente.display}`;
+  c.font = `14px ${fuente.display}`;
   c.textAlign = 'right';
   c.textBaseline = 'bottom';
   c.fillText(etiquetaX, x1, H - 2);
@@ -419,7 +419,7 @@ export function PlanoCartesiano({ series, titulo, escalaY = 'lineal', etiquetaX 
     // ---- Leyenda como chapas de goma (arriba a la derecha del área de trazado).
     if (datos.series.length) {
       c.save();
-      c.font = `11px ${fuente.display}`;
+      c.font = `12px ${fuente.display}`;
       const altoChapa = 20;
       const anchos = datos.series.map((s) => c.measureText(s.nombre).width + 38);
       const anchoBloque = Math.max(...anchos);

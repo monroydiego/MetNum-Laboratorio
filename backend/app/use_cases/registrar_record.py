@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 
 from app.domain.funciones import ErrorMetodo
+from app.domain.matricula import validar_matricula
 from app.domain.repositories import IRecordRepo
 
 MODOS_CON_RECORD = {"campana", "contrarreloj"}
@@ -20,9 +21,7 @@ class RegistrarRecord:
         self._repo = repo
 
     def registrar(self, matricula: str, modo: str, tiempo_ms: int, puntos: int) -> ResultadoRecord:
-        matricula = matricula.strip()
-        if not matricula:
-            raise ErrorMetodo("Se necesita una matrícula para registrar el récord.")
+        matricula = validar_matricula(matricula)
         if modo not in MODOS_CON_RECORD:
             raise ErrorMetodo("Solo Campaña y Contrarreloj registran récord.")
         if tiempo_ms < TIEMPO_MINIMO_MS:

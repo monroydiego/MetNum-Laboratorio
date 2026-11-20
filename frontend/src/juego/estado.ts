@@ -1,6 +1,7 @@
 // Estado global de la partida: useReducer + persistencia en localStorage (con try/catch).
 import { useEffect, useReducer } from 'react';
 import { SALAS, consolasRequeridas, indiceSala, type IdSala, type Sala, TOTAL_REQUERIDAS } from './mapa';
+import { limpiarMatricula } from './matricula';
 
 /** Puntos de cada vida (barra de vida del traje). */
 export const ENERGIA_MAX = 100;
@@ -169,9 +170,9 @@ function aplicarDano(estado: EstadoJuego, cantidad: number): EstadoJuego {
 function reductor(estado: EstadoJuego, accion: Accion): EstadoJuego {
   switch (accion.tipo) {
     case 'nuevaPartida':
-      return { ...estadoInicial(accion.matricula.trim().slice(0, 20)), modo: accion.modo ?? 'campana', enCurso: true };
+      return { ...estadoInicial(limpiarMatricula(accion.matricula.trim())), modo: accion.modo ?? 'campana', enCurso: true };
     case 'matricula':
-      return { ...estado, matricula: accion.valor.slice(0, 20) };
+      return { ...estado, matricula: limpiarMatricula(accion.valor) };
     case 'entrarSala':
       if (!salaDesbloqueada(estado, accion.sala)) return estado;
       return { ...estado, enCurso: true, salaActual: accion.sala };
@@ -245,7 +246,7 @@ export function cargarPartida(): EstadoJuego | null {
     if (!crudo) return null;
     const d = JSON.parse(crudo) as Partial<EstadoJuego>;
     if (!d || d.version !== 3) return null;
-    const base = estadoInicial(typeof d.matricula === 'string' ? d.matricula.slice(0, 20) : '');
+    const base = estadoInicial(typeof d.matricula === 'string' ? limpiarMatricula(d.matricula) : '');
     const resueltos = Array.isArray(d.resueltos) ? d.resueltos.filter((s): s is string => typeof s === 'string' && SLUGS.has(s)) : [];
     const estado: EstadoJuego = {
       ...base,
