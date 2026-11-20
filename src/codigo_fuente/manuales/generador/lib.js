@@ -91,6 +91,17 @@ function crear(pages = {}) {
     return lineas.map((l, i) => new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 0 }, keepNext: i < lineas.length - 1, shading: { fill: GRIS.claro, type: ShadingType.CLEAR, color: 'auto' }, indent: { left: 200, right: 200 },
       border: { left: { style: BorderStyle.SINGLE, size: 12, color: GRIS.borde, space: 6 } }, children: [new TextRun({ text: l || ' ', font: 'Courier New', size: 18 })] })).concat([spacer(120)]);
   }
+  // Recuadro de código pegado literalmente: todos los párrafos comparten los mismos cuatro bordes, así que
+  // Word y LibreOffice los dibujan como una sola caja continua (que se parte entre páginas sin perder el marco).
+  const lado = { style: BorderStyle.SINGLE, size: 6, color: GRIS.borde, space: 4 };
+  function CODIGO(lineas) {
+    return lineas.map((l) => new Paragraph({
+      alignment: AlignmentType.LEFT, spacing: { after: 0, before: 0 }, indent: { left: 120, right: 120 },
+      shading: { fill: GRIS.claro, type: ShadingType.CLEAR, color: 'auto' },
+      border: { top: lado, bottom: lado, left: lado, right: lado },
+      children: [new TextRun({ text: l.replace(/\t/g, '    ') || ' ', font: 'Courier New', size: 16 })],
+    })).concat([spacer(200)]);
+  }
   const NOTA = (titulo, texto) => [new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { before: 80, after: 160, line: 276 }, shading: { fill: GRIS.claro, type: ShadingType.CLEAR, color: 'auto' }, indent: { left: 160, right: 160 },
     border: { left: { style: BorderStyle.SINGLE, size: 18, color: GRIS.medio, space: 8 } }, children: [run(titulo + '. ', { bold: true, size: 20 }), ...runs(texto, { size: 20 })] })];
 
@@ -106,7 +117,7 @@ function crear(pages = {}) {
   const indiceFiguras = () => [tituloIndice('Índice de figuras'), ...figs.map((f) => entrada(`Figura ${f.n}. ${f.texto}`, f.anchor, pg('f:' + f.n), 0, false))];
   const indiceTablas = () => [tituloIndice('Índice de tablas'), ...tabs.map((t) => entrada(`Tabla ${t.n}. ${t.texto}`, t.anchor, pg('t:' + t.n), 0, false))];
 
-  return { P, H1, H2, H3, UL, OL, FIG, TBL, CODE, NOTA, spacer, runs, run, heads, figs, tabs, olRefs, indiceContenido, indiceFiguras, indiceTablas };
+  return { P, H1, H2, H3, UL, OL, FIG, TBL, CODE, CODIGO, NOTA, spacer, runs, run, heads, figs, tabs, olRefs, indiceContenido, indiceFiguras, indiceTablas };
 }
 
 function documento(titulo, autor, ctx, cuerpo, pages, tieneTablas = true) {
@@ -120,11 +131,11 @@ function documento(titulo, autor, ctx, cuerpo, pages, tieneTablas = true) {
   return new Document({
     creator: autor, title: titulo, description: 'Escape del Laboratorio Numérico II, Edición DELUXE',
     styles: {
-      default: { document: { run: { font: 'Arial', size: 22 } } },
+      default: { document: { run: { font: 'Arial', size: 24 } } }, // Arial 12 pt
       paragraphStyles: [
         { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { size: 32, bold: true, font: 'Arial', color: GRIS.oscuro }, paragraph: { spacing: { before: 120, after: 240 }, outlineLevel: 0, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GRIS.borde, space: 4 } } } },
-        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { size: 26, bold: true, font: 'Arial', color: GRIS.oscuro }, paragraph: { spacing: { before: 260, after: 120 }, outlineLevel: 1 } },
-        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { size: 23, bold: true, font: 'Arial', color: GRIS.medio }, paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 2 } },
+        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { size: 28, bold: true, font: 'Arial', color: GRIS.oscuro }, paragraph: { spacing: { before: 260, after: 120 }, outlineLevel: 1 } },
+        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { size: 25, bold: true, font: 'Arial', color: GRIS.medio }, paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 2 } },
       ],
     },
     numbering: { config: [vinetas, ...numeradas] },

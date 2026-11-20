@@ -106,7 +106,7 @@ export function Inicio({ estado, docente, onContinuar, onNueva, onProfesor, onDo
         problema con los métodos del libro para recuperar la instalación.
       </p>
 
-      <form onSubmit={nueva} className="flex flex-col gap-6">
+      <form onSubmit={nueva} className="flex flex-col gap-6" noValidate>
         {/* Selección de modo: tres carteles de película; la tecla ← → cambia de cartel (radio nativo). */}
         <fieldset className="m-0 flex min-w-0 flex-col gap-3 border-0 p-0">
           <legend className="mb-3 flex items-center gap-3 p-0 font-display text-h3 tracking-wide">

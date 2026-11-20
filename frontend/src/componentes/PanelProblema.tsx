@@ -8,6 +8,7 @@ import { calcular, mensajeDeError, obtenerProblema, revisarProblema, verificarRe
 import type { EvidenciaDTO, MetodoInfoDTO, ResultadoNumericoDTO } from '../types/numericos';
 import { camposDesdeEsquema, valoresDesdeEjemplo, valoresIniciales, type ValoresFormulario } from '../utilidades/esquema';
 import { ROMANOS } from '../juego/mapa';
+import { esMatriculaValida, limpiarMatricula, MATRICULA_DIGITOS, MENSAJE_MATRICULA } from '../juego/matricula';
 import { VIDA_POR_RESPUESTA_INCORRECTA, type ProblemaAsignado } from '../juego/estado';
 import { FormularioMetodo } from './FormularioMetodo';
 import { NombreResultado } from './Latex';
@@ -143,6 +144,10 @@ export function PanelProblema(props: Props) {
     }
     if (!matricula.trim()) {
       setError('Escribe tu matrícula: tu foto queda registrada a tu nombre para el docente.');
+      return;
+    }
+    if (!esMatriculaValida(matricula)) {
+      setError(MENSAJE_MATRICULA);
       return;
     }
     if (!foto) {
@@ -332,7 +337,20 @@ export function PanelProblema(props: Props) {
                 {!props.matricula && (
                   <label className="flex flex-col gap-1.5 font-display text-sm">
                     Matrícula
-                    <input className="campo numero font-normal" value={matricula} maxLength={20} inputMode="numeric" autoComplete="off" onChange={(e) => setMatricula(e.target.value)} />
+                    <input
+                      className="campo numero font-normal"
+                      value={matricula}
+                      maxLength={MATRICULA_DIGITOS}
+                      inputMode="numeric"
+                      pattern="[0-9]{7}"
+                      title={MENSAJE_MATRICULA}
+                      autoComplete="off"
+                      onChange={(e) => {
+                        const limpia = limpiarMatricula(e.target.value);
+                        setMatricula(limpia);
+                        if (limpia !== e.target.value) setError(MENSAJE_MATRICULA);
+                      }}
+                    />
                   </label>
                 )}
               </fieldset>
